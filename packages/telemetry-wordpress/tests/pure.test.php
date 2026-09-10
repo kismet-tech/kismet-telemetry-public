@@ -75,6 +75,8 @@ $r = kismet_telemetry_resolve(['threaded' => 'kid_Thread01', 'cookie_sid' => nul
 ok($r['suppressed'] && $r['kid_sid'] === null, 'resolve: bot echoing a threaded id is suppressed');
 $r = kismet_telemetry_resolve(['threaded' => null, 'cookie_sid' => null, 'cookie_vid' => null, 'is_bot' => false, 'consented' => false]);
 ok($r['suppressed'] && $r['reconcile'] === null, 'resolve: no consent is suppressed');
+$r = kismet_telemetry_resolve(['threaded' => 'kid_Thread01', 'cookie_sid' => 'kid_Cook0001', 'cookie_vid' => 'vid_abcdef', 'is_bot' => false, 'consented' => false]);
+ok($r['suppressed'] && $r['kid_sid'] === null && $r['kid_vid'] === null && !$r['set_sid'] && $r['reconcile'] === null, 'resolve: consent withdrawal overrides existing carriers');
 $r = kismet_telemetry_resolve(['threaded' => null, 'cookie_sid' => 'nope', 'cookie_vid' => null, 'is_bot' => false, 'consented' => true]);
 ok($r['tier'] === 'minted' && preg_match(KISMET_TELEMETRY_KID_MINT_RE, $r['kid_sid']) && $r['reconcile'] === 'proposed', 'resolve: bad cookie grammar falls through to a mint');
 

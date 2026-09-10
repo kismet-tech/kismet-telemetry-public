@@ -22,14 +22,15 @@ function kismet_telemetry_resolve(array $in): array {
     $vid      = kismet_telemetry_valid_vid($in['cookie_vid'] ?? null);
     $is_bot   = !empty($in['is_bot']);
 
-    if ($threaded !== null && !$is_bot) {
-        return ['kid_sid' => $threaded, 'kid_vid' => $vid, 'tier' => 'threaded', 'set_sid' => $threaded !== $cookie, 'suppressed' => false, 'reconcile' => 'threaded'];
-    }
-    if ($cookie !== null && !$is_bot) {
-        return ['kid_sid' => $cookie, 'kid_vid' => $vid, 'tier' => 'cookie', 'set_sid' => false, 'suppressed' => false, 'reconcile' => null];
-    }
+    // A carrier is identity, not evidence of current consent.
     if ($is_bot || empty($in['consented'])) {
         return ['kid_sid' => null, 'kid_vid' => null, 'tier' => 'suppressed', 'set_sid' => false, 'suppressed' => true, 'reconcile' => null];
+    }
+    if ($threaded !== null) {
+        return ['kid_sid' => $threaded, 'kid_vid' => $vid, 'tier' => 'threaded', 'set_sid' => $threaded !== $cookie, 'suppressed' => false, 'reconcile' => 'threaded'];
+    }
+    if ($cookie !== null) {
+        return ['kid_sid' => $cookie, 'kid_vid' => $vid, 'tier' => 'cookie', 'set_sid' => false, 'suppressed' => false, 'reconcile' => null];
     }
     return ['kid_sid' => kismet_telemetry_mint(), 'kid_vid' => $vid, 'tier' => 'minted', 'set_sid' => true, 'suppressed' => false, 'reconcile' => 'proposed'];
 }
@@ -176,11 +177,10 @@ function kismet_telemetry_bootstrap_js(string $ajax_url, string $kjs_url, string
         . "function load(){if(window.__kismetTelemetryTag)return;window.__kismetTelemetryTag=1;"
         . "var s=document.createElement('script');s.async=true;s.src=K.kjs+'?c='+encodeURIComponent(K.c);"
         . "(document.head||document.documentElement).appendChild(s);}\n"
-        . "function ck(n){var m=document.cookie.match(new RegExp('(?:^|; )'+n+'=([^;]*)'));return m?decodeURIComponent(m[1]):'';}\n"
-        . "var warm=ck('_kid_sid');var threaded=/[?&]kid_sid=/.test(location.search);\n"
-        . "if(warm&&RE.test(warm)&&!threaded){window.Kismet._kidSid=warm;load();return;}\n"
+        // Always consult current consent, including on cached pages with an old cookie.
         . "var done=false;function go(d){if(done)return;done=true;"
-        . "if(d&&d.suppressed){window.Kismet._sidSuppressed=1;}else if(d&&d.kid_sid&&RE.test(d.kid_sid)){window.Kismet._kidSid=d.kid_sid;}load();}\n"
+        . "if(d&&!d.suppressed&&d.kid_sid&&RE.test(d.kid_sid)){window.Kismet._sidSuppressed=0;window.Kismet._kidSid=d.kid_sid;}"
+        . "else{window.Kismet._sidSuppressed=1;delete window.Kismet._kidSid;}load();}\n"
         . "var t=setTimeout(function(){go(null);},1500);\n"
         . "try{fetch(K.ajax+'?action=kismet_telemetry_anchor&u='+encodeURIComponent(location.href),{credentials:'include',cache:'no-store'})"
         . ".then(function(r){return r.json();}).then(function(d){clearTimeout(t);go(d);})"

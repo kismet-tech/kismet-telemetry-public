@@ -2,6 +2,8 @@
 
 ## 1.0.1 (unreleased)
 
+- Recheck consent before adopting an existing or threaded identity and before attaching a session to property events. The browser bootstrap checks the anchor even with a warm cookie and suppresses identity on anchor failure.
+- Add a disposable real WordPress HTTP fixture for cookie, consent, crawler, property-event and simulated booking-bridge validation. Post-fix HTTP and browser validation remain pending.
 - Include Apache-2.0 license and notices in the zip.
 - Remove unverified WordPress tested-version claim; staging validation remains pending.
 

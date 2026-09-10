@@ -1,0 +1,56 @@
+name: telemetry-wp-validation
+services:
+  db:
+    image: mariadb:11
+    environment:
+      MARIADB_ROOT_PASSWORD: local-test-only
+      MARIADB_DATABASE: wordpress
+      MARIADB_USER: wordpress
+      MARIADB_PASSWORD: local-test-only
+    volumes: ["db:/var/lib/mysql"]
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 2s
+      retries: 30
+  wordpress:
+    image: wordpress:php8.2-apache
+    ports: ["127.0.0.1:8496:80"]
+    environment: &wp-env
+      WORDPRESS_DB_HOST: db
+      WORDPRESS_DB_USER: wordpress
+      WORDPRESS_DB_PASSWORD: local-test-only
+      WORDPRESS_DB_NAME: wordpress
+      WORDPRESS_CONFIG_EXTRA: |
+        define('WP_ENVIRONMENT_TYPE', 'local');
+        define('WP_HOME', 'http://telemetry.test:8496');
+        define('WP_SITEURL', 'http://telemetry.test:8496');
+        define('WP_HTTP_BLOCK_EXTERNAL', true);
+        define('WP_ACCESSIBLE_HOSTS', 'collector');
+        define('KISMET_TELEMETRY_RESOLVE_URL', 'http://collector:8797/v1/identity/resolve-anchor');
+        define('KISMET_TELEMETRY_TRACK_URL', 'http://collector:8797/api/track');
+        define('KISMET_TELEMETRY_API_ORIGIN', 'http://collector:8797');
+        define('KISMET_TELEMETRY_KJS_URL', '/lab-k.js');
+    volumes:
+      - wp:/var/www/html
+      - ../..:/var/www/html/wp-content/plugins/kismet-telemetry:ro
+      - ./fixture.php:/var/www/html/wp-content/mu-plugins/telemetry-lab.php:ro
+    depends_on:
+      db: {condition: service_healthy}
+  cli:
+    image: wordpress:cli-php8.2
+    user: "33:33"
+    environment: *wp-env
+    volumes:
+      - wp:/var/www/html
+      - ../..:/var/www/html/wp-content/plugins/kismet-telemetry:ro
+      - ./fixture.php:/var/www/html/wp-content/mu-plugins/telemetry-lab.php:ro
+      - ./setup.php:/lab/setup.php:ro
+    profiles: [tools]
+  collector:
+    image: wordpress:cli-php8.2
+    entrypoint: ["php", "-S", "0.0.0.0:8797", "/lab/collector.php"]
+    ports: ["127.0.0.1:8797:8797"]
+    volumes: ["./collector.php:/lab/collector.php:ro"]
+volumes:
+  db:
+  wp:

@@ -73,7 +73,7 @@ function kismet_telemetry_beacon_send(): void {
     $is_bot = $bot['isBot'] || kismet_telemetry_is_bot($ua);
 
     $session = null;
-    if (!$is_bot && $cls['kind'] !== 'agent') {
+    if (!$is_bot && $cls['kind'] !== 'agent' && kismet_telemetry_should_set_cookies()) {
         $session = kismet_telemetry_valid_kid(isset($_COOKIE['_kid_sid']) ? (string) $_COOKIE['_kid_sid'] : null);
     }
 
