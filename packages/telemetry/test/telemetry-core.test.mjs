@@ -101,8 +101,9 @@ test('seed: id then tag, suppression flag, nothing when neither, grammar-checked
     );
     assert.equal(
         renderSeedScript({ suppressed: true }),
-        '<script>window.Kismet=window.Kismet||{};window.Kismet._sidSuppressed=1;</script>'
+        '<script>window.Kismet=window.Kismet||{};window.Kismet._sidSuppressed=1;delete window.Kismet._kidSid;</script>'
     );
+    assert.ok(!renderSeed({ suppressed: true, collectionSlug: 'x' }).includes('src='));
     assert.equal(renderSeed({ kidSid: null, collectionSlug: 'x' }), '');
     assert.equal(renderSeedScript({ kidSid: 'kid_"><script>' }), '');
 });
@@ -180,6 +181,28 @@ test('isBotUserAgent: vocabulary, generic clients, missing UA, humans', () => {
     assert.equal(isBotUserAgent(''), true);
     assert.equal(isBotUserAgent(null), true);
     assert.equal(isBotUserAgent(UA), false);
+});
+
+test('resolveVisitor: current consent overrides cookie and threaded carriers', async () => {
+    for (const carrier of ['cookie', 'threaded']) {
+        const result = await resolveVisitor({
+            url: new URL(
+                `https://example.com/${carrier === 'threaded' ? '?kid_sid=kid_Thread01' : ''}`
+            ),
+            headers: new Headers({
+                'user-agent': UA,
+                cookie: carrier === 'cookie' ? '_kid_sid=kid_Cook0001; _kid_vid=vid_abcdef' : '',
+            }),
+            collectionSlug: 'example-collection',
+            trackingKey: 'ctk_test',
+            consent: () => false,
+        });
+        assert.equal(result.suppressed, true);
+        assert.equal(result.kidSid, null);
+        assert.equal(result.kidVid, null);
+        assert.equal(result.setSid, false);
+        assert.equal(result.reconcile, null);
+    }
 });
 
 test('resolveVisitor: threaded, cookie, suppressed (bot / no consent), cold mint + reconcile, authorityFirst, no key', async () => {

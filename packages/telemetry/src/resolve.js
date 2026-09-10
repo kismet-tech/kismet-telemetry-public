@@ -154,6 +154,25 @@ export async function resolveVisitor(input) {
         return quiet;
     };
 
+    // Current consent is checked before any existing identity is adopted.
+    const consented = isBot
+        ? false
+        : await resolveConsent(input.consent, { country, headers, url });
+    if (isBot || !consented) {
+        return {
+            kidSid: null,
+            kidVid: null,
+            tier: 'suppressed',
+            setSid: false,
+            setVid: false,
+            suppressed: true,
+            isBot,
+            consented,
+            reconcile: null,
+            resolveBody: null,
+        };
+    }
+
     // 1. threaded
     if (threaded && !isBot) {
         const body = buildResolveAnchorBody({
@@ -190,25 +209,6 @@ export async function resolveVisitor(input) {
             suppressed: false,
             isBot: false,
             consented: true,
-            reconcile: null,
-            resolveBody: null,
-        };
-    }
-
-    // 3. suppressed: bots, and humans without consent
-    const consented = isBot
-        ? false
-        : await resolveConsent(input.consent, { country, headers, url });
-    if (isBot || !consented) {
-        return {
-            kidSid: null,
-            kidVid: null,
-            tier: 'suppressed',
-            setSid: false,
-            setVid: false,
-            suppressed: true,
-            isBot,
-            consented,
             reconcile: null,
             resolveBody: null,
         };

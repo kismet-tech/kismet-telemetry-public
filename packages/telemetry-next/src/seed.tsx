@@ -39,6 +39,7 @@ export function kismetSeedInline({
     const seed = renderSeedScript({ kidSid, suppressed });
     if (!seed) return '';
     const assignment = seed.replace(/^<script>/, '').replace(/<\/script>$/, '');
+    if (suppressed) return assignment;
     const src = `${kjsUrl || DEFAULT_KJS_URL}?c=${encodeURIComponent(collectionSlug)}`;
     return (
         assignment +

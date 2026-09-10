@@ -74,9 +74,9 @@ Conformance: cookie names, ages, attributes and the domain rule are asserted fro
 
 For every page request the adapter resolves the visitor in this order and stops at the first match. Assets, the adapter's own API routes, and anything that is not a page or an agent surface are excluded before this runs.
 
-1. **Threaded.** `?kid_sid=<id>` on the URL and the id matches the read grammar: adopt it verbatim. Set the cookie if it differs from the current cookie. Send a non-blocking resolve-anchor with `threadedKidSid` (and `cookieKidSid` when a different cookie was present) so the authority can back-stitch the hop. This is how a session crosses domains or arrives from an email link.
-2. **Cookie.** `_kid_sid` present and valid: adopt it. No network.
-3. **Suppressed.** Bot user agent, missing user agent, or a consent-denied visitor: no id, no cookie, no network. The page seed (section 7) carries the suppression flag so k.js will not mint either.
+1. **Suppressed.** Bot user agent, missing user agent, or a consent-denied visitor: no id, no cookie, no network. The page seed (section 7) carries the suppression flag so k.js will not mint either.
+2. **Threaded.** `?kid_sid=<id>` on the URL and the id matches the read grammar: adopt it verbatim. Set the cookie if it differs from the current cookie. Send a non-blocking resolve-anchor with `threadedKidSid` (and `cookieKidSid` when a different cookie was present) so the authority can back-stitch the hop. This is how a session crosses domains or arrives from an email link.
+3. **Cookie.** `_kid_sid` present and valid: adopt it. No network.
 4. **Cold human.** No carrier. The adapter MUST produce an id without blocking the response. The v1 default is:
    - mint an id in the mint grammar,
    - set the cookie,
@@ -154,7 +154,7 @@ A page served to a human MUST carry, in `<head>`, in this order:
 A page served to a suppressed visitor (bot, or consent denied) MUST seed the suppression flag instead of an id:
 
 ```html
-<script>window.Kismet=window.Kismet||{};window.Kismet._sidSuppressed=1;</script>
+<script>window.Kismet=window.Kismet||{};window.Kismet._sidSuppressed=1;delete window.Kismet._kidSid;</script>
 ```
 
 Rules:
@@ -165,7 +165,7 @@ Rules:
 - The adapter MUST NOT set or read the globals `__kismetKjs`, `__kismetKjsEval`, `__kismetKjsTag` or `__kismetAnalyticsAdapterMounted`. k.js owns them; reusing one caused a production outage on 2026-07-09.
 - The seed value is per visitor. See section 10 for what that means for caching.
 
-**Cache-safe variant.** A site that serves full-page-cached HTML cannot inline a per-visitor seed. The WordPress plugin's pattern is the contract's alternative: a constant bootstrap script in `<head>` that reads the `_kid_sid` cookie, and if it is absent calls a never-cached, same-origin endpoint that runs the resolution of section 5 and returns `{ "kid_sid": "…", "kid_vid": "…" }` with the `Set-Cookie`; the bootstrap then writes `window.Kismet._kidSid` and injects the k.js tag. The bootstrap MUST fall through to loading k.js after 1,500 ms regardless, so a slow endpoint never blocks tracking. Any adapter MAY implement this variant; the Next reference does not need it because it renders dynamically.
+**Cache-safe variant.** A site that serves full-page-cached HTML cannot inline a per-visitor seed. The WordPress plugin uses a constant bootstrap in `<head>` that calls a never-cached, same-origin endpoint on every visit. That endpoint evaluates current consent before adopting an existing identifier and returns the resolution of section 5. The bootstrap seeds a permitted session and then loads k.js. A suppressed response, endpoint failure or 1,500 ms timeout sets suppression and does not load k.js. This keeps page rendering independent of tracking and prevents a retained cookie from bypassing current consent. Any adapter MAY implement this variant.
 
 ## 8. Server-plane content events
 
@@ -369,3 +369,7 @@ The contract carries a major.minor version. A minor version adds optional fields
 Changelog:
 
 - **1.0 (2026-09-03, draft).** Extracted from the shipped worker, Next reference, WordPress plugin and the platform routes. Decisions taken here rather than inherited: dotted cookie domain as the rule; local mint plus async reconcile as the default; the consent hook as a MUST; the tracking key on the bridge and quote calls.
+
+### Consent suppression clarification
+
+Current consent takes precedence over a session cookie or threaded identifier. For a suppressed visitor, emit the suppression seed without loading the browser tracker. This prevents an older browser tracker from adopting a retained cookie. Consent changes within an already loaded page require integration with the consent manager; navigation-based validation does not establish in-page revocation behavior.

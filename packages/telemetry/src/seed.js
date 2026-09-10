@@ -26,7 +26,7 @@ export const RESERVED_GLOBALS = [
  */
 export function renderSeedScript(input) {
     if (input.suppressed) {
-        return '<script>window.Kismet=window.Kismet||{};window.Kismet._sidSuppressed=1;</script>';
+        return '<script>window.Kismet=window.Kismet||{};window.Kismet._sidSuppressed=1;delete window.Kismet._kidSid;</script>';
     }
     if (input.kidSid && KID_SID_RE.test(input.kidSid)) {
         return `<script>window.Kismet=window.Kismet||{};window.Kismet._kidSid="${input.kidSid}";</script>`;
@@ -52,6 +52,7 @@ export function renderKjsTag(collectionSlug, kjsUrl) {
 export function renderSeed(input) {
     const seed = renderSeedScript(input);
     if (!seed) return '';
+    if (input.suppressed) return seed;
     return seed + renderKjsTag(input.collectionSlug, input.kjsUrl);
 }
 

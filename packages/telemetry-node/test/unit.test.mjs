@@ -54,6 +54,8 @@ test('kismetSeedHtml: seed then tag in one script, suppression, nothing when nei
     assert.equal((html.match(/<script>/g) || []).length, 1, 'one inline script');
     const sup = kismetSeedHtml({ kidSid: null, suppressed: true }, 'x');
     assert.ok(sup.includes('_sidSuppressed=1') && !sup.includes('_kidSid="'));
+    assert.ok(!sup.includes('createElement'));
+    assert.ok(!sup.includes('src='));
     assert.equal(kismetSeedHtml({ kidSid: null, suppressed: false }, 'x'), '');
     assert.equal(kismetSeedHtml({ kidSid: 'kid_"><script>', suppressed: false }, 'x'), '');
 });

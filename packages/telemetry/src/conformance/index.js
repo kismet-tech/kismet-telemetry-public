@@ -426,6 +426,30 @@ export async function runConformance(makeDriver, opts) {
             authority.reset();
             relay.reset();
 
+            // Current consent overrides carriers from a previous visit or link.
+            for (const carrier of ['cookie', 'threaded']) {
+                const denied = await driver.handle(
+                    makeRequest(
+                        f.host,
+                        carrier === 'threaded' ? `${f.pagePath}?kid_sid=${tid}` : f.pagePath,
+                        {
+                            'cf-ipcountry': 'GB',
+                            ...(carrier === 'cookie' ? { cookie: `_kid_sid=${cid}` } : {}),
+                        }
+                    )
+                );
+                await flush();
+                check(
+                    `R3.denied-${carrier}`,
+                    'denied visitor has no session, new cookie or authority request',
+                    !setCookieFor(denied, '_kid_sid') &&
+                        authority.requests.length === 0 &&
+                        relay.requests.every((r) => !r.body?.clientSessionId)
+                );
+                authority.reset();
+                relay.reset();
+            }
+
             // suppressed (bot): no authority call
             await driver.handle(makeRequest(f.host, f.pagePath, { 'user-agent': BOT_UA }));
             await flush();

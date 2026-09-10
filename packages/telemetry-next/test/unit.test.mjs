@@ -32,6 +32,8 @@ test('KismetSeedScripts: seed then tag, suppression, nothing when neither', () =
         createElement(KismetSeedScripts, { collectionSlug: 'x', kidSid: null, suppressed: true })
     );
     assert.ok(sup.includes('_sidSuppressed=1') && !sup.includes('_kidSid="'));
+    assert.ok(!sup.includes('createElement'));
+    assert.ok(!sup.includes('src='));
     const none = renderToStaticMarkup(
         createElement(KismetSeedScripts, { collectionSlug: 'x', kidSid: null, suppressed: false })
     );

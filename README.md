@@ -20,15 +20,17 @@ Kismet Telemetry connects page visits, AI crawler requests and completed booking
 | JavaScript core | [`@kismet-tech/telemetry`](https://www.npmjs.com/package/@kismet-tech/telemetry) | npm 1.0.0 |
 | Next.js | [`@kismet-tech/telemetry-next`](https://www.npmjs.com/package/@kismet-tech/telemetry-next) | npm 1.0.0 |
 | Node.js | [`@kismet-tech/telemetry-node`](https://www.npmjs.com/package/@kismet-tech/telemetry-node) | npm 1.0.0 |
-| WordPress | [Standalone plugin](packages/telemetry-wordpress) | Source preview; production validation pending |
+| WordPress | [Download plugin ZIP](https://github.com/kismet-tech/kismet-telemetry-public/releases/download/telemetry-wordpress-v1.0.1/kismet-telemetry-1.0.1.zip) | 1.0.1; local validation complete, site acceptance required |
 
-This repository contains the 1.0.1 source candidate. The published npm packages remain at 1.0.0; source availability does not indicate that a new package version has been released. Django support is planned.
+This repository contains the reviewed 1.0.1 source. The published npm packages remain at 1.0.0; source availability does not indicate that a new package version has been released. Django support is planned.
 
 ## Getting started
 
 1. Obtain a collection slug and server-side tracking key through Kismet onboarding, and register your site's authorized domains.
 2. Install the adapter for your framework and follow its configuration guide.
 3. Connect your consent manager, configure your route mappings and validate the integration on staging.
+
+The corrected npm 1.0.1 release is pending. The commands below currently install 1.0.0, which does not include the consent corrections in this source revision. Wait for the corrected npm release before a new production installation.
 
 For Next.js:
 

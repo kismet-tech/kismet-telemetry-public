@@ -2,6 +2,8 @@
 
 ## 1.0.1 (unreleased)
 
+- Apply current consent before adopting an existing identity and omit the browser tracker when identity is suppressed.
+
 - Add Apache-2.0 license and notices to source distributions.
 - Clarify data flow, catalog prerequisites and release validation status.
 

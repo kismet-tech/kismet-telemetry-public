@@ -137,6 +137,7 @@ export function kismetSeedHtml(
 ): string {
     const seed = renderSeedScript({ kidSid: input.kidSid, suppressed: input.suppressed });
     if (!seed) return '';
+    if (input.suppressed) return seed;
     const assignment = seed.replace(/^<script>/, '').replace(/<\/script>$/, '');
     const src = `${kjsUrl || DEFAULT_KJS_URL}?c=${encodeURIComponent(collectionSlug)}`;
     return (

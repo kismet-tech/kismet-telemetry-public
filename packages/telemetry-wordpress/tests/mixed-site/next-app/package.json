@@ -1,0 +1,12 @@
+{
+  "name": "telemetry-mixed-site-validation",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --hostname 127.0.0.1 --port 8500"
+  },
+  "dependencies": {
+    "next": "15.5.25",
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  }
+}
