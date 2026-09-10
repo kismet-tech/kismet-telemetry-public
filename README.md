@@ -1,43 +1,72 @@
 # Kismet Telemetry
 
-Server-side tracking for sites that run on your own stack. One versioned HTTP contract, a small core, and thin adapters per framework, so an engineering team can install Kismet tracking from the docs without Kismet in their request path.
+Visitor attribution and server-side event collection for websites built on your own stack.
 
-Docs: https://developers.kismet.travel/telemetry/. Contract: [docs/CONTRACT.md](docs/CONTRACT.md).
+Kismet Telemetry connects page visits, AI crawler requests and completed bookings to Kismet through a shared HTTP contract. A small JavaScript core and framework adapters integrate with your existing application, including sites that combine WordPress and Next.js.
+
+[Documentation](https://developers.kismet.travel/telemetry/) · [Data flow](docs/data-flow.md) · [HTTP contract](docs/CONTRACT.md)
+
+## Capabilities
+
+- **Page and crawler events:** Record requests handled by your application, including crawlers that do not execute JavaScript.
+- **Visitor continuity:** Carry a first-party session across supported site surfaces, with consent controls configured for your application.
+- **Booking attribution:** Connect a confirmed reservation to its visitor session through a server-side booking bridge.
+- **Property and funnel mapping:** Map application routes to property views, search and checkout events. Property-level attribution requires a configured Kismet catalog and supported identifier mapping.
 
 ## Packages
 
-| Package | Registry | Status |
-|---|---|---|
-| [`@kismet-tech/telemetry`](packages/telemetry) | npm | 1.0.0 published: the core, contract 1.0 as code, browser helpers, conformance harness |
-| [`@kismet-tech/telemetry-next`](packages/telemetry-next) | npm | 1.0.0 published 2026-09-04, live-smoked |
-| [`@kismet-tech/telemetry-node`](packages/telemetry-node) | npm | 1.0.0 published 2026-09-04, live-smoked |
-| [`kismet-telemetry`](packages/telemetry-wordpress) (WordPress plugin) | source and zip build script | 1.0.1 source available for review; real WordPress validation pending |
-| `kismet-telemetry` (Django) | PyPI | planned |
+| Integration | Package | Availability |
+| --- | --- | --- |
+| JavaScript core | [`@kismet-tech/telemetry`](https://www.npmjs.com/package/@kismet-tech/telemetry) | npm 1.0.0 |
+| Next.js | [`@kismet-tech/telemetry-next`](https://www.npmjs.com/package/@kismet-tech/telemetry-next) | npm 1.0.0 |
+| Node.js | [`@kismet-tech/telemetry-node`](https://www.npmjs.com/package/@kismet-tech/telemetry-node) | npm 1.0.0 |
+| WordPress | [Standalone plugin](packages/telemetry-wordpress) | Source preview; production validation pending |
 
-Every adapter runs the same conformance suite (`@kismet-tech/telemetry/conformance`) against a stub authority and relay. An adapter that does not pass does not ship.
+This repository contains the 1.0.1 source candidate. The published npm packages remain at 1.0.0; source availability does not indicate that a new package version has been released. Django support is planned.
 
-This public repository was opened for source review on 2026-09-09. It contains the licensed 1.0.1 source candidate; npm 1.0.0 remains the published package version. This source publication does not announce a new npm release.
+## Getting started
 
-## Review before installing
+1. Obtain a collection slug and server-side tracking key through Kismet onboarding, and register your site's authorized domains.
+2. Install the adapter for your framework and follow its configuration guide.
+3. Connect your consent manager, configure your route mappings and validate the integration on staging.
 
-Read [what is installed and sent](docs/data-flow.md), including the separately served browser tracker and catalog prerequisites. Kismet supplies tracking keys through onboarding. The dedicated install report and self-serve key flow are not included in this release.
+For Next.js:
 
-## What you get on install
+```sh
+npm install @kismet-tech/telemetry-next
+```
 
-Page and crawler requests that execute the adapter are recorded server-side, with a first-party session for consenting humans. WordPress full-page cache hits can bypass the server beacon. The booking bridge connects a confirmed reservation to its session. Property-level attribution and reporting require the corresponding Kismet configuration and backend support.
+For Node.js:
 
-## Repository layout
+```sh
+npm install @kismet-tech/telemetry-node
+```
 
-- `packages/telemetry`: the core. `npm test` runs the unit tests and the reference adapter through the full conformance suite; `npm run build` emits ESM and CJS.
-- `packages/telemetry-next`, `packages/telemetry-node`: the Next.js and Node adapters. `npm test` builds and runs each through the conformance suite.
-- `packages/telemetry-wordpress`: the standalone WordPress plugin. `php tests/pure.test.php` and `bin/build-zip.sh`.
-- `docs/CONTRACT.md`: the contract every adapter implements. `docs/install-*.md`: install outlines per site shape.
-- `.github/workflows`: the PR guard and the manual publish.
+See the [Next.js guide](packages/telemetry-next/README.md), [Node.js guide](packages/telemetry-node/README.md), or [WordPress and Next.js integration guide](docs/install-wordpress-plus-nextjs.md) for configuration and booking-bridge examples. Installing a package alone does not configure tracking.
 
-## Bot vocabulary
+## Data and integration boundaries
 
-`packages/telemetry/bot-patterns.json` is a vendored copy of the platform's vocabulary. `npm run generate:check` fails when the generated table lags the JSON; the platform side checks that the vendored copy matches its source.
+The adapters send configured request metadata and event payloads to Kismet. They do not grant Kismet access to your source repository or upload your application code. The browser tracker is served separately from the npm packages. Review the [data-flow guide](docs/data-flow.md) for the fields collected, destinations and source-review boundaries.
+
+Configure consent explicitly for your site. A geography fallback cannot determine a visitor's consent when the hosting platform supplies no country information. Keep tracking keys on the server.
+
+Server-side coverage includes requests that execute the adapter. Full-page caches can bypass WordPress and its server beacon. Property-level reporting depends on catalog configuration and backend support; Contract 1.1 identifier resolution and generic conversions are separate from the Contract 1.0 integration documented here.
+
+## Development
+
+| Directory | Contents |
+| --- | --- |
+| [`packages/telemetry`](packages/telemetry) | Core library, browser helpers and shared conformance harness |
+| [`packages/telemetry-next`](packages/telemetry-next) | Next.js middleware and rendering integration |
+| [`packages/telemetry-node`](packages/telemetry-node) | Node.js adapter |
+| [`packages/telemetry-wordpress`](packages/telemetry-wordpress) | Standalone WordPress plugin and zip build tooling |
+| [`docs`](docs) | HTTP contract, data flow and integration guidance |
+| [`.github/workflows`](.github/workflows) | Validation and release workflows |
+
+The JavaScript packages include unit and conformance tests against local test services. Run the commands documented in each package's README before submitting a change. WordPress includes PHP tests and a zip build script; real-site validation is an additional requirement.
+
+Bot classification uses the versioned vocabulary in [`bot-patterns.json`](packages/telemetry/bot-patterns.json). Run `npm run generate:check` from `packages/telemetry` to check that generated files match the vocabulary.
 
 ## License
 
-The source in this revision is licensed under [Apache-2.0](LICENSE). Package version 1.0.1 is prepared but unreleased; previously published 1.0.0 artifacts retain their original metadata. See [NOTICE](NOTICE). Dependencies retain their own licenses.
+The source in this repository is licensed under [Apache-2.0](LICENSE). See [NOTICE](NOTICE) for attribution. Previously published npm 1.0.0 artifacts retain their original license metadata, and third-party dependencies retain their own licenses.
