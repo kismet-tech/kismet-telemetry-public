@@ -1,6 +1,6 @@
 # Telemetry 1.0.1 candidate validation
 
-Status: local validation passed. Corrected npm artifacts remain unpublished; see the repository Releases page for WordPress downloads. This report is evidence for source review, not approval of a customer production installation.
+Status: local validation passed. Corrected npm artifacts are version 1.0.1; see the repository Releases page for WordPress downloads. This report is evidence for source review, not approval of a customer production installation.
 
 ## Results
 
@@ -28,7 +28,7 @@ See [HTTP fixture](../packages/telemetry-wordpress/tests/integration/README.md) 
 
 Validate the actual staging consent manager, WordPress caching/CDN, HTTPS and proxy topology, Next deployment build, checkout mapping, and production ingest/report reconciliation. Immediate consent revocation within an already loaded page is not established by navigation-based tests. The cached-HTML fixture does not certify any particular cache plugin or CDN. Source review and local validation can precede staging access.
 
-Before recommending installation, merge the fixes privately, publish the reviewed public source snapshot and matching artifacts, and verify anonymous source/download access. Publish the corrected core before its adapters. Do not present npm 1.0.0 as the validated correction.
+The fixes were reviewed and merged privately before publication of the public source snapshot and 1.0.1 artifacts. Use the corrected core with the adapters, including when an existing lockfile pins an older core. Customer-site acceptance remains required.
 
 ## Candidate artifact SHA-256
 

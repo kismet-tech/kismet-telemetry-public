@@ -17,12 +17,12 @@ Kismet Telemetry connects page visits, AI crawler requests and completed booking
 
 | Integration | Package | Availability |
 | --- | --- | --- |
-| JavaScript core | [`@kismet-tech/telemetry`](https://www.npmjs.com/package/@kismet-tech/telemetry) | npm 1.0.0 |
-| Next.js | [`@kismet-tech/telemetry-next`](https://www.npmjs.com/package/@kismet-tech/telemetry-next) | npm 1.0.0 |
-| Node.js | [`@kismet-tech/telemetry-node`](https://www.npmjs.com/package/@kismet-tech/telemetry-node) | npm 1.0.0 |
+| JavaScript core | [`@kismet-tech/telemetry`](https://www.npmjs.com/package/@kismet-tech/telemetry) | npm 1.0.1 |
+| Next.js | [`@kismet-tech/telemetry-next`](https://www.npmjs.com/package/@kismet-tech/telemetry-next) | npm 1.0.1 |
+| Node.js | [`@kismet-tech/telemetry-node`](https://www.npmjs.com/package/@kismet-tech/telemetry-node) | npm 1.0.1 |
 | WordPress | [Download plugin ZIP](https://github.com/kismet-tech/kismet-telemetry-public/releases/download/telemetry-wordpress-v1.0.1/kismet-telemetry-1.0.1.zip) | 1.0.1; local validation complete, site acceptance required |
 
-This repository contains the reviewed 1.0.1 source. The published npm packages remain at 1.0.0; source availability does not indicate that a new package version has been released. Django support is planned.
+This repository contains the reviewed 1.0.1 source. The npm packages and WordPress plugin are available as version 1.0.1. Django support is planned.
 
 ## Getting started
 
@@ -30,18 +30,16 @@ This repository contains the reviewed 1.0.1 source. The published npm packages r
 2. Install the adapter for your framework and follow its configuration guide.
 3. Connect your consent manager, configure your route mappings and validate the integration on staging.
 
-The corrected npm 1.0.1 release is pending. The commands below currently install 1.0.0, which does not include the consent corrections in this source revision. Wait for the corrected npm release before a new production installation.
-
 For Next.js:
 
 ```sh
-npm install @kismet-tech/telemetry-next
+npm install @kismet-tech/telemetry@1.0.1 @kismet-tech/telemetry-next@1.0.1
 ```
 
 For Node.js:
 
 ```sh
-npm install @kismet-tech/telemetry-node
+npm install @kismet-tech/telemetry@1.0.1 @kismet-tech/telemetry-node@1.0.1
 ```
 
 See the [Next.js guide](packages/telemetry-next/README.md), [Node.js guide](packages/telemetry-node/README.md), or [WordPress and Next.js integration guide](docs/install-wordpress-plus-nextjs.md) for configuration and booking-bridge examples. Installing a package alone does not configure tracking.
