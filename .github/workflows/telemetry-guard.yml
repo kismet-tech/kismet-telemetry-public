@@ -1,0 +1,167 @@
+# Telemetry guard (#96 Tracking SDK, Kismet Telemetry 1.0.0).
+#
+# WHY THIS WORKFLOW EXISTS
+#
+# packages/telemetry is the tracking contract (docs/
+# CONTRACT.md) as code, and every framework adapter (telemetry-next, the WordPress
+# plugin, the Django package, telemetry-node) builds on it and runs its conformance
+# suite. Two things rot silently without a gate: the generated bot vocabulary can lag
+# packages/telemetry/bot-patterns.json, and the reference adapter can drift
+# from the contract. This runs exactly what `prepublishOnly` runs, plus Prettier, on
+# every PR that touches the package or the vocabulary source.
+#
+# The edge worker's guard in kismet-infrastructure is unchanged: packages/edge-events
+# stays the worker's source until the deprecated-alias release lands.
+
+name: Telemetry Guard
+
+on:
+  pull_request:
+    paths:
+      - 'packages/telemetry/**'
+      - 'packages/telemetry-next/**'
+      - 'packages/telemetry-node/**'
+      - 'packages/telemetry-wordpress/**'
+      - 'packages/telemetry/bot-patterns.json'
+      - 'docs/CONTRACT.md'
+      - '.github/workflows/telemetry-guard.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  core:
+    name: '@kismet-tech/telemetry: generate, typecheck, format, test (incl. conformance), build'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/telemetry
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: packages/telemetry/package-lock.json
+
+      # Public registry only (typescript, prettier, @types/node); no GitHub Packages auth needed.
+      - name: Install
+        run: npm ci
+
+      - name: Generated bot vocabulary is current
+        run: npm run generate:check
+
+      - name: Typecheck (checkJs)
+        run: npm run typecheck
+
+      - name: Prettier
+        run: npm run format:check
+
+      # Includes test/conformance.test.mjs: the reference adapter through the full
+      # contract suite against the stub authority and relay. No network.
+      - name: Unit tests and conformance
+        run: npm test
+
+      - name: Build (esm + cjs + d.ts, ./client and ./conformance subpaths)
+        run: |
+          npm run build
+          node -e "require('./dist/cjs/index.js'); require('./dist/cjs/client.js'); require('./dist/cjs/conformance/index.js')"
+          node -e "import('./dist/esm/index.js').then(m => { if (m.CONTRACT_VERSION !== '1.0') process.exit(1) })"
+
+  next:
+    name: '@kismet-tech/telemetry-next: typecheck, format, build, test (incl. conformance)'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/telemetry-next
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: packages/telemetry-next/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Prettier
+        run: npm run format:check
+
+      # Builds, then runs the contract conformance suite with a real NextRequest.
+      - name: Build and test
+        run: npm test
+
+  node:
+    name: '@kismet-tech/telemetry-node: typecheck, format, build, test (incl. conformance)'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/telemetry-node
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: packages/telemetry-node/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Prettier
+        run: npm run format:check
+
+      # Builds esm and cjs, then runs the contract conformance suite through a real
+      # Express app on a real HTTP server behind forwarded headers.
+      - name: Build and test
+        run: npm test
+
+  wordpress:
+    name: 'kismet-telemetry (WordPress): lint, pure tests, generated vocabulary, zip'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/telemetry-wordpress
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: none
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Generated bot vocabulary is current
+        run: node scripts/generate-bot-patterns.mjs --check
+
+      - name: Lint
+        run: for f in kismet-telemetry.php includes/*.php; do php -l "$f"; done
+
+      - name: Pure tests (no WordPress)
+        run: php tests/pure.test.php
+
+      - name: Build zip
+        run: bin/build-zip.sh
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kismet-telemetry-zip
+          path: packages/telemetry-wordpress/dist/*.zip

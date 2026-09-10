@@ -1,0 +1,76 @@
+{
+  "name": "@kismet-tech/telemetry",
+  "version": "1.0.1",
+  "description": "Kismet Telemetry core: the server-side tracking contract (v1.0) as code. Adopt-before-mint session resolution with local mint plus async reconcile, consent-gated first-party cookies, the page seed, the one content-event builder and bot vocabulary, booking-bridge and quote-capture clients, a route profile for funnel mapping, browser helpers, and the conformance harness every framework adapter runs.",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/esm/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
+    },
+    "./client": {
+      "types": "./dist/esm/client.d.ts",
+      "import": "./dist/esm/client.js",
+      "require": "./dist/cjs/client.js"
+    },
+    "./conformance": {
+      "types": "./dist/esm/conformance/index.d.ts",
+      "import": "./dist/esm/conformance/index.js",
+      "require": "./dist/cjs/conformance/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "generate": "node scripts/generate-bot-patterns.mjs",
+    "generate:check": "node scripts/generate-bot-patterns.mjs --check",
+    "typecheck": "tsc -p tsconfig.json",
+    "build": "npm run generate:check && rm -rf dist && tsc -p tsconfig.esm.json && tsc -p tsconfig.cjs.json && node scripts/write-cjs-package.mjs",
+    "test": "node --test test/*.test.mjs",
+    "format:check": "prettier --check \"src/**/*.js\" \"scripts/**/*.mjs\" \"test/**/*.mjs\"",
+    "format": "prettier --write \"src/**/*.js\" \"scripts/**/*.mjs\" \"test/**/*.mjs\"",
+    "prepublishOnly": "npm run typecheck && npm test && npm run build"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kismet-tech/kismet-telemetry-public.git",
+    "directory": "packages/telemetry"
+  },
+  "homepage": "https://developers.kismet.travel/telemetry/",
+  "keywords": [
+    "kismet",
+    "telemetry",
+    "tracking",
+    "attribution",
+    "ai-visibility",
+    "middleware",
+    "cloudflare-workers",
+    "nextjs"
+  ],
+  "author": "Kismet Technologies",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "@types/node": "^20.19.0",
+    "prettier": "^3.8.1",
+    "typescript": "^5.8.3"
+  }
+}

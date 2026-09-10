@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "module": "CommonJS",
+    "moduleResolution": "node10",
+    "declaration": false,
+    "outDir": "./dist/cjs",
+    "rootDir": "./src",
+    "baseUrl": ".",
+    "paths": {
+      "@kismet-tech/telemetry/client": [
+        "./node_modules/@kismet-tech/telemetry/dist/esm/client.d.ts"
+      ]
+    }
+  }
+}

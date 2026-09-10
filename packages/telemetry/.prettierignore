@@ -1,0 +1,4 @@
+dist/
+node_modules/
+# Machine-written from bot-patterns.json; its bytes are the generator output, not a style choice.
+src/bot-patterns.generated.js

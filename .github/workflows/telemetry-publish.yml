@@ -1,0 +1,109 @@
+# Publish @kismet-tech/telemetry (#96 Tracking SDK).
+#
+# MANUAL ONLY. `workflow_dispatch`, never on push or merge: publishing is outward-facing
+# and irreversible (npm versions are immutable), so it stays a deliberate act. Default is
+# a dry run. Nothing is ever published from a working session; Jason dispatches.
+#
+# TWO REGISTRIES, BOTH NEEDED (same shape as edge-events-publish.yml)
+#   • npmjs (public):       framework adapters and client sites install from it.
+#                           Needs the repo secret NPM_PUBLISH_TOKEN (an npmjs automation
+#                           token with publish rights on the @kismet-tech scope). The job
+#                           FAILS LOUDLY if that secret is absent.
+#   • GitHub Packages:      kismet.travel's .npmrc routes @kismet-tech there. Uses the
+#                           built-in GITHUB_TOKEN with `packages: write`.
+#
+# The version published is whatever packages/telemetry/package.json says. Bump it in a
+# PR (with a CHANGELOG entry naming the contract version), merge, then dispatch.
+# `npm publish` refuses a version that already exists, which guards a double publish.
+
+name: Publish telemetry
+
+on:
+  workflow_dispatch:
+    inputs:
+      registry:
+        description: 'Where to publish'
+        type: choice
+        default: both
+        options: [both, npmjs, github]
+      dry_run:
+        description: 'Dry run (pack and validate, publish nothing)'
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    name: 'publish @kismet-tech/telemetry (dry_run=${{ inputs.dry_run }})'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/telemetry
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: packages/telemetry/package-lock.json
+
+      - name: Install
+        run: npm ci
+
+      # The same gate `prepublishOnly` runs, made explicit so a failure names itself.
+      - name: Gate (generated vocabulary, types, format, tests incl. conformance, build)
+        run: |
+          npm run generate:check
+          npm run typecheck
+          npm run format:check
+          npm test
+          npm run build
+
+      - name: Read version
+        id: v
+        run: echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Publish to npmjs (public)
+        if: inputs.registry == 'both' || inputs.registry == 'npmjs'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_PUBLISH_TOKEN }}
+        run: |
+          if [ -z "${NODE_AUTH_TOKEN}" ]; then
+            echo "::error::NPM_PUBLISH_TOKEN is not set. Add an npmjs automation token with publish rights on the @kismet-tech scope, or dispatch with registry=github."
+            exit 1
+          fi
+          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > .npmrc
+          npm publish --access public --registry=https://registry.npmjs.org ${{ inputs.dry_run && '--dry-run' || '' }}
+          rm -f .npmrc
+          echo "npmjs: @kismet-tech/telemetry@${{ steps.v.outputs.version }} (dry_run=${{ inputs.dry_run }})" >> "$GITHUB_STEP_SUMMARY"
+
+      # publishConfig.registry (npmjs) would otherwise win over the --registry flag, so
+      # point it at GitHub Packages for this step only. The checkout is throwaway.
+      - name: Publish to GitHub Packages
+        if: inputs.registry == 'both' || inputs.registry == 'github'
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          node -e "const fs=require('fs');const p=JSON.parse(fs.readFileSync('package.json','utf8'));p.publishConfig={...p.publishConfig,registry:'https://npm.pkg.github.com'};fs.writeFileSync('package.json',JSON.stringify(p,null,2)+'\n')"
+          echo "//npm.pkg.github.com/:_authToken=${NODE_AUTH_TOKEN}" > .npmrc
+          npm publish --registry=https://npm.pkg.github.com ${{ inputs.dry_run && '--dry-run' || '' }}
+          rm -f .npmrc
+          git checkout package.json
+          echo "GitHub Packages: @kismet-tech/telemetry@${{ steps.v.outputs.version }} (dry_run=${{ inputs.dry_run }})" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Next steps
+        if: ${{ !inputs.dry_run }}
+        run: |
+          {
+            echo ""
+            echo "Published @kismet-tech/telemetry@${{ steps.v.outputs.version }} (contract 1.0)."
+            echo "- Tag the release: git tag telemetry-v${{ steps.v.outputs.version }} && git push --tags"
+            echo "- Adapters pin this version: packages/telemetry-next, packages/telemetry-node (npm install, commit the lockfile)."
+            echo "- Follow-up PR: @kismet-tech/edge-events 0.2.0 as a deprecated alias re-exporting this package."
+            echo "- Docs: developers.kismet.travel/telemetry/ (Kismet-SDK apps/developer-docs) names this version."
+          } >> "$GITHUB_STEP_SUMMARY"

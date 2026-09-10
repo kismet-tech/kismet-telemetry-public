@@ -1,0 +1,58 @@
+# Release the kismet-telemetry WordPress plugin zip (#96 Tracking SDK).
+#
+# MANUAL ONLY. Builds the zip from packages/telemetry-wordpress at the plugin
+# header's version and attaches it to a GitHub release tagged
+# telemetry-wordpress-v<version>. Default is a dry run (build only). wordpress.org
+# submission is a separate, later step.
+
+name: Release telemetry-wordpress
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run (build the zip, create no release)'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: 'release kismet-telemetry zip (dry_run=${{ inputs.dry_run }})'
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/telemetry-wordpress
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: none
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Gate (vocabulary, lint, pure tests) and build
+        run: |
+          node scripts/generate-bot-patterns.mjs --check
+          for f in kismet-telemetry.php includes/*.php; do php -l "$f"; done
+          php tests/pure.test.php
+          bin/build-zip.sh
+      - name: Read version
+        id: v
+        run: echo "version=$(sed -n 's/^ \* Version:[[:space:]]*//p' kismet-telemetry.php | head -1)" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: kismet-telemetry-${{ steps.v.outputs.version }}
+          path: packages/telemetry-wordpress/dist/*.zip
+      - name: Create GitHub release with the zip
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "telemetry-wordpress-v${{ steps.v.outputs.version }}" \
+            "dist/kismet-telemetry-${{ steps.v.outputs.version }}.zip" \
+            --title "kismet-telemetry WordPress ${{ steps.v.outputs.version }}" \
+            --notes "Kismet Telemetry WordPress plugin ${{ steps.v.outputs.version }} (contract 1.0). See packages/telemetry-wordpress/CHANGELOG.md."

@@ -1,0 +1,80 @@
+{
+  "name": "@kismet-tech/telemetry-next",
+  "version": "1.0.1",
+  "description": "Kismet Telemetry for Next.js: createKismetMiddleware() on the @kismet-tech/telemetry core (contract 1.0), a <KismetSeed /> for the root layout, render-time server events, booking-bridge and quote-capture helpers, and the browser helpers. Ships with the contract conformance suite.",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./seed": {
+      "types": "./dist/seed.d.ts",
+      "import": "./dist/seed.js"
+    },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "import": "./dist/client.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "build": "rm -rf dist && tsc -p tsconfig.build.json",
+    "test": "npm run build && node --test test/*.test.mjs",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx}\" \"test/**/*.mjs\"",
+    "format": "prettier --write \"src/**/*.{ts,tsx}\" \"test/**/*.mjs\"",
+    "prepublishOnly": "npm run typecheck && npm test"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kismet-tech/kismet-telemetry-public.git",
+    "directory": "packages/telemetry-next"
+  },
+  "homepage": "https://developers.kismet.travel/telemetry/nextjs/",
+  "keywords": [
+    "kismet",
+    "telemetry",
+    "tracking",
+    "nextjs",
+    "middleware",
+    "attribution",
+    "ai-visibility"
+  ],
+  "author": "Kismet Technologies",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@kismet-tech/telemetry": "^1.0.0"
+  },
+  "peerDependencies": {
+    "next": ">=14.2.0",
+    "react": ">=18.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.0",
+    "@types/react": "^19.1.0",
+    "next": "^15.5.0",
+    "prettier": "^3.8.1",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "typescript": "^5.8.3"
+  }
+}

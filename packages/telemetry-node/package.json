@@ -1,0 +1,74 @@
+{
+  "name": "@kismet-tech/telemetry-node",
+  "version": "1.0.1",
+  "description": "Kismet Telemetry for Node servers: kismetTelemetry() Express and Connect middleware on the @kismet-tech/telemetry core (contract 1.0), the page seed for your template, booking-bridge and quote-capture helpers, and the browser helpers. Works with Express, Connect, Fastify (raw request and reply), Koa and plain node:http. Ships with the contract conformance suite.",
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/cjs/index.js",
+  "module": "./dist/esm/index.js",
+  "types": "./dist/esm/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/esm/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
+    },
+    "./client": {
+      "types": "./dist/esm/client.d.ts",
+      "import": "./dist/esm/client.js",
+      "require": "./dist/cjs/client.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "src",
+    "README.md",
+    "CHANGELOG.md",
+    "LICENSE",
+    "NOTICE"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "build": "rm -rf dist && tsc -p tsconfig.esm.json && tsc -p tsconfig.cjs.json && node scripts/write-cjs-package.mjs",
+    "test": "npm run build && node --test test/*.test.mjs",
+    "format:check": "prettier --check \"src/**/*.ts\" \"test/**/*.mjs\" \"scripts/**/*.mjs\"",
+    "format": "prettier --write \"src/**/*.ts\" \"test/**/*.mjs\" \"scripts/**/*.mjs\"",
+    "prepublishOnly": "npm run typecheck && npm test"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kismet-tech/kismet-telemetry-public.git",
+    "directory": "packages/telemetry-node"
+  },
+  "homepage": "https://developers.kismet.travel/telemetry/node/",
+  "keywords": [
+    "kismet",
+    "telemetry",
+    "tracking",
+    "express",
+    "connect",
+    "fastify",
+    "middleware",
+    "attribution",
+    "ai-visibility"
+  ],
+  "author": "Kismet Technologies",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@kismet-tech/telemetry": "^1.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.19.0",
+    "express": "^5.1.0",
+    "prettier": "^3.8.1",
+    "typescript": "^5.8.3"
+  }
+}
