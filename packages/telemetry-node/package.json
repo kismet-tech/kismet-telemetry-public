@@ -1,6 +1,6 @@
 {
   "name": "@kismet-tech/telemetry-node",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Kismet Telemetry for Node servers: kismetTelemetry() Express and Connect middleware on the @kismet-tech/telemetry core (contract 1.0), the page seed for your template, booking-bridge and quote-capture helpers, and the browser helpers. Works with Express, Connect, Fastify (raw request and reply), Koa and plain node:http. Ships with the contract conformance suite.",
   "type": "module",
   "sideEffects": false,
@@ -63,7 +63,7 @@
   "author": "Kismet Technologies",
   "license": "Apache-2.0",
   "dependencies": {
-    "@kismet-tech/telemetry": "^1.0.0"
+    "@kismet-tech/telemetry": "^1.1.1"
   },
   "devDependencies": {
     "@types/node": "^20.19.0",

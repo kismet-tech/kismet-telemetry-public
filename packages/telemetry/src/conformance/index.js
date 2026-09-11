@@ -215,6 +215,7 @@ const BOT_UA =
 function makeRequest(host, path, headers) {
     const h = new Headers({
         'user-agent': HUMAN_UA,
+        'cf-ipcountry': 'US',
         accept: 'text/html,application/xhtml+xml,*/*;q=0.8',
         'accept-language': 'en-GB,en;q=0.9',
         'x-forwarded-proto': 'https',
@@ -366,6 +367,25 @@ export async function runConformance(makeDriver, opts) {
                 'GB without consent gets no cookie',
                 !setCookieFor(denied, '_kid_sid')
             );
+            for (const country of ['', 'XX', 'T1', 'invalid']) {
+                const unknown = await driver.handle(
+                    makeRequest(f.host, f.pagePath, {
+                        'cf-ipcountry': country,
+                        cookie: '_kid_sid=kid_Warm0001; _kid_ft=old',
+                    })
+                );
+                check(
+                    `R2.unknown-${country || 'missing'}`,
+                    'unknown geography cannot adopt a previous session',
+                    !setCookieFor(unknown, '_kid_sid') ||
+                        /Max-Age=0/.test(setCookieFor(unknown, '_kid_sid') || '')
+                );
+                check(
+                    `R2.unknown-seed-${country || 'missing'}`,
+                    'unknown geography suppresses the browser tracker',
+                    (await unknown.text()).includes('_sidSuppressed')
+                );
+            }
             if (f.consentCookie) {
                 const consented = await driver.handle(
                     makeRequest(f.host, f.pagePath, {

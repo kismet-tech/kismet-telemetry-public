@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.0.2
+
+- Require telemetry core 1.1.1 so missing or unknown country information denies tracking cookies by default. Explicit consent hooks remain supported.
+
 ## 1.0.1 (unreleased)
 
 - Apply current consent before adopting an existing identity and omit the browser tracker when identity is suppressed.

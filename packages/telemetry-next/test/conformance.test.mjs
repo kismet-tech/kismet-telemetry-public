@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { NextRequest } from 'next/server.js';
 import { runConformance, formatReport } from '@kismet-tech/telemetry/conformance';
-import { consentFromCookie } from '@kismet-tech/telemetry';
+import { consentFromCookie, countryAllowsCookies } from '@kismet-tech/telemetry';
 import { createKismetMiddleware } from '../dist/index.js';
 
 // The adapter proves itself against the contract: a real NextRequest in, a real
@@ -16,8 +16,7 @@ test('createKismetMiddleware passes the v1 conformance suite', async () => {
             endpoints: { resolveAnchor: env.authorityUrl, track: env.relayUrl },
             consent: (ctx) => {
                 const c = (ctx.country || '').toUpperCase();
-                if (!c || c === 'XX' || c === 'T1' || !['GB', 'FR', 'DE', 'CH', 'IE'].includes(c))
-                    return true;
+                if (countryAllowsCookies(c)) return true;
                 return consentFromCookie('CookieConsent', /statistics:true/)(ctx);
             },
             profile: {

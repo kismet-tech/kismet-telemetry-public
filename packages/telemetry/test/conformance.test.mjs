@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { runConformance, formatReport } from '../src/conformance/index.js';
 import { createReferenceAdapter } from '../src/conformance/reference-adapter.js';
-import { consentFromCookie } from '../src/index.js';
+import { consentFromCookie, countryAllowsCookies } from '../src/index.js';
 
 // The core proves itself: the reference adapter (fetch handler on the core alone)
 // passes the contract's conformance suite. Every framework adapter ships the same
@@ -18,8 +18,7 @@ test('reference adapter passes the v1 conformance suite', async () => {
                 // Country default, plus a consent-manager cookie for consent jurisdictions.
                 const cmp = consentFromCookie('CookieConsent', /statistics:true/);
                 const c = (ctx.country || '').toUpperCase();
-                if (!c || c === 'XX' || c === 'T1' || !['GB', 'FR', 'DE', 'CH', 'IE'].includes(c))
-                    return true;
+                if (countryAllowsCookies(c)) return true;
                 return cmp(ctx);
             },
             profile: {

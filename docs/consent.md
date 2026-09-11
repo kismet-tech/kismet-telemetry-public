@@ -9,7 +9,7 @@ Share your banner/CMP name, consent-cookie format and saved-choice event with Ki
 Configure an explicit analytics-consent hook on both WordPress and Next.js. Start denied and return true only for the banner's positive analytics choice. The saved choice must be available to both frameworks, normally in a cookie with `Path=/` and the shared site domain. A browser-only localStorage value is not visible to server middleware.
 
 - WordPress: use the consent-manager cookie settings with a pattern matching acceptance, or the `kismet_telemetry_should_set_cookies` filter. WordPress 1.1.1 also denies missing geography by default.
-- Next.js: use the middleware's `consent` callback or `consentFromCookie(cookieName, acceptancePattern)`. Existing published npm versions need this explicit hook on hosts without country headers.
+- Next.js: use the middleware's `consent` callback or `consentFromCookie(cookieName, acceptancePattern)`. Use the explicit hook so the banner controls consent on every host, regardless of country headers.
 
 Do not treat cookie presence as acceptance. Many banners save a cookie for rejected choices too. Server sessionless request collection is separate from browser consent gating; review the [data-flow guide](https://developers.kismet.travel/telemetry/data-flow/) for that behavior.
 

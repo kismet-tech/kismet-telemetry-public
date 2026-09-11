@@ -17,12 +17,12 @@ Kismet Telemetry connects page visits, AI crawler requests and completed booking
 
 | Integration | Package | Availability |
 | --- | --- | --- |
-| JavaScript core | [`@kismet-tech/telemetry`](https://www.npmjs.com/package/@kismet-tech/telemetry) | npm 1.1.0 |
-| Next.js | [`@kismet-tech/telemetry-next`](https://www.npmjs.com/package/@kismet-tech/telemetry-next) | npm 1.1.0 |
-| Node.js | [`@kismet-tech/telemetry-node`](https://www.npmjs.com/package/@kismet-tech/telemetry-node) | npm 1.0.1 |
+| JavaScript core | [`@kismet-tech/telemetry`](https://www.npmjs.com/package/@kismet-tech/telemetry) | npm 1.1.1 |
+| Next.js | [`@kismet-tech/telemetry-next`](https://www.npmjs.com/package/@kismet-tech/telemetry-next) | npm 1.1.1 |
+| Node.js | [`@kismet-tech/telemetry-node`](https://www.npmjs.com/package/@kismet-tech/telemetry-node) | npm 1.0.2 |
 | WordPress | [Download plugin ZIP](https://github.com/kismet-tech/kismet-telemetry-public/releases/download/telemetry-wordpress-v1.1.1/kismet-telemetry-1.1.1.zip) | 1.1.1; local validation complete, site acceptance required |
 
-The WordPress plugin is version 1.1.1. The published core and Next.js adapter are 1.1.0; Node.js is 1.0.1. Django support is planned. WordPress 1.1.1 denies missing or unknown geography by default. Existing npm adapters require an explicit consent hook on hosts without country headers until the corresponding core patch is published.
+The WordPress plugin, core and Next.js adapter are version 1.1.1; Node.js is 1.0.2. These versions deny cookies when country information is missing or unknown. Configure an explicit consent hook to follow your banner’s saved choice. Django support is planned.
 
 ## Getting started
 

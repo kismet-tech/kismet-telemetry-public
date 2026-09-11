@@ -1,6 +1,6 @@
 # Pinned browser tracker
 
-The optional pinned browser tracker is versioned independently of the npm adapters. Release 1.1.0 supports configured Google, GA4, Meta and OpenAI tags and works with telemetry Next.js and WordPress 1.1.0 or later. On hosts without country headers, configure an explicit default-denied consent hook; the next adapter patch also denies missing geography by default. It requires a consent-permitted session supplied by the adapter. Existing installations keep their current configuration until their operator changes it.
+The optional pinned browser tracker is versioned independently of the npm adapters. Release 1.1.0 supports configured Google, GA4, Meta and OpenAI tags and works with telemetry Next.js and WordPress 1.1.0 or later. On hosts without country headers, configure an explicit default-denied consent hook; core/Next.js 1.1.1 and Node 1.0.2 also deny missing geography by default. It requires a consent-permitted session supplied by the adapter. Existing installations keep their current configuration until their operator changes it.
 
 For your own consent banner, use [browser 1.2.0 with the consent bridge](consent.md). It follows explicit analytics and advertising choices and reloads after saved changes so server adapters and vendor scripts follow the new choice.
 

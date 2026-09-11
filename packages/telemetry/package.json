@@ -1,6 +1,6 @@
 {
   "name": "@kismet-tech/telemetry",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Kismet Telemetry core: the server-side tracking contract (v1.0) as code. Adopt-before-mint session resolution with local mint plus async reconcile, consent-gated first-party cookies, the page seed, the one content-event builder and bot vocabulary, booking-bridge and quote-capture clients, a route profile for funnel mapping, browser helpers, and the conformance harness every framework adapter runs.",
   "type": "module",
   "sideEffects": false,
