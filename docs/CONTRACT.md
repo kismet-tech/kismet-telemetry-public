@@ -2,12 +2,12 @@
 type: Reference
 title: "Kismet Tracking HTTP Contract v1.0"
 description: "The cookie, seed and beacon protocol a server-side tracking adapter implements on a client's own stack. Versioned; every adapter conforms to one contract version."
-status: "v1.0 draft, extracted 2026-09-03 from the shipped implementations. Not yet published on developers.kismet.travel."
+status: "Published contract 1.0, with the optional visitor-recognition extension released in package 1.1.0."
 timestamp: 2026-09-03T21:00:00-04:00
 ---
 # Kismet Tracking HTTP Contract v1.0
 
-**Contract version:** 1.0 (draft). **Applies to:** every server-side adapter (Next.js, Node, Django, WordPress, hand-wired) and to the Kismet edge worker, which is the reference emitter.
+**Contract version:** 1.0. **Applies to:** every server-side adapter (Next.js, Node, Django, WordPress, hand-wired) and to the Kismet edge worker, which is the reference emitter.
 
 This document is the wire contract between a site that runs a Kismet tracking adapter and the Kismet platform. It says what an adapter reads, what it sets, what it sends, and what it may never do. It does not describe any one adapter's API; each adapter has its own install page that points back here.
 
@@ -46,7 +46,7 @@ Where to get the key: a collection admin reveals or rotates it with `GET` or `PO
 |---|---|---|
 | `kid_sid`, read grammar | `^kid_[A-Za-z0-9]{6,40}$` | What an adapter accepts from a `?kid_sid=` parameter or the `_kid_sid` cookie. Anything else is treated as absent. |
 | `kid_sid`, mint grammar | `^kid_[A-Za-z0-9]{8}$` | What an adapter mints and what the authority adopts as a proposed id. Exactly eight characters after the prefix. A proposed id of any other length is silently re-minted by the authority, which forks the visitor into two sessions. |
-| `kid_vid` | `^[A-Za-z0-9_]{6,64}$` | Only ever echoed back by the authority. |
+| `kid_vid` | Legacy: `^[A-Za-z0-9_]{6,64}$`; visitor-recognition extension: `^vid_[a-f0-9]{64}$` (68 characters total) | Authority-issued recognition hint; adapters never mint one. |
 | Mint alphabet | `A-Z a-z 0-9` | Eight bytes from a cryptographic random source, each reduced modulo 62. |
 
 Conformance: the suite mints 1,000 ids and asserts every one matches the mint grammar; it presents a 7-char and a 9-char id and asserts the adapter never proposes them.
@@ -56,7 +56,7 @@ Conformance: the suite mints 1,000 ids and asserts every one matches the mint gr
 | Cookie | Max-Age | Set when | Attributes |
 |---|---|---|---|
 | `_kid_sid` | 7,776,000 s (90 days) | The resolved id was not already on the visitor (threaded id differs from the cookie, or a cold mint). Refreshing on every request is allowed but not required. | `Path=/; SameSite=Lax; Secure` when the request is HTTPS; **not** `HttpOnly` (k.js reads it through `document.cookie`) |
-| `_kid_vid` | 34,560,000 s (about 400 days) | Only when the authority returned one that differs from the cookie. | Same as above |
+| `_kid_vid` | 34,560,000 s (about 400 days) | When the authority returns a valid token after consent; the optional visitor follow-up may refresh the cookie. | Same as above |
 
 **Domain rule.** The cookie MUST be set with `Domain=.<serving domain>` where the serving domain is the request host with a leading `www.` and any port removed (the same normalization the serving domain on events uses, section 8). Host-only cookies (no `Domain` attribute) are permitted only when the host is a single label such as `localhost` or an IP address, which browsers reject a `Domain` on. Adapters MUST let the operator override the domain for sites whose registrable domain is deeper than the serving domain (for example `book.example.com` sharing a session with `example.com`).
 
@@ -86,11 +86,19 @@ For every page request the adapter resolves the visitor in this order and stops 
 
    An adapter MAY offer an "authority first" mode that calls resolve-anchor before responding, with no proposed id, so the authority's fingerprint tier can recover a session this browser already has elsewhere. If offered it MUST be opt-in, MUST be bounded at 1,500 ms, and MUST fall back to the local mint on any failure. It is not the default because a cold visitor should never wait on Kismet.
 
-Fail-open means "never null for a human", not "no id". A human always leaves with a `kid_sid`; what varies is whether the authority has heard about it yet.
+Fail-open means "never null for a human", not "no id". A consent-permitted human leaves with a `kid_sid`; what varies is whether the authority has heard about it yet.
 
 The resolved decision SHOULD be passed to the page render as request-scoped data (the Next reference uses the request headers `x-kismet-kid-sid`, `x-kismet-sid-suppressed: 1` and `x-kismet-anchor-tier: threaded | cookie | authority | minted | suppressed`). The tier header on the response is useful for verification and harmless to expose.
 
 Conformance: each of the four branches is exercised against a local stub of the authority; the cold branch asserts a response was produced before the stub was called.
+
+### Optional returning-visitor extension (package 1.1.0)
+
+The 1.1.0 core, Next.js and WordPress releases add a bounded visitor-cookie follow-up. This is an optional extension to Contract 1.0, separate from the planned Contract 1.1 property/conversion changes. It requires an explicit consent hook or consent-cookie configuration, adapter opt-in and collection enablement at Kismet. Geography alone does not enable it.
+
+The follow-up sends `visitorConsent: true`, the established page session as `proposedKidSid`, and `cookieKidVid` when present to the tracking-key-authenticated resolve-anchor endpoint. It waits at most one second and persists the returned visitor token only when the returned session matches the page session. It does not block page rendering or replace that session. The normal page-resolution path above remains asynchronous.
+
+Kismet stores the token hash and collection-scoped visitor/session links. A valid visitor token can link a new session after loss of the session cookie; it does not authenticate a guest or authorize wallet access. Token expiry is 400 days from issuance, and browser policies or user deletion can shorten cookie persistence. Consent withdrawal clears both cookies on the next adapter request; immediate in-page withdrawal must invoke the site's consent refresh flow.
 
 ## 6. Resolve-anchor (the authority)
 
