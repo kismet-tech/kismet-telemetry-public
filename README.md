@@ -52,6 +52,8 @@ Next.js and WordPress support an opt-in `_kid_vid` cookie that links later sessi
 
 The adapters send configured request metadata and event payloads to Kismet. They do not grant Kismet access to your source repository or upload your application code. The browser tracker is served separately from the npm packages. Review the [data-flow guide](docs/data-flow.md) for the fields collected, destinations and source-review boundaries.
 
+Connect your existing banner through the [consent integration guide](docs/consent.md), or ask Kismet to prepare the configuration for your CMP.
+
 Configure consent explicitly for your site. A geography fallback cannot determine a visitor's consent when the hosting platform supplies no country information. Keep tracking keys on the server.
 
 Server-side coverage includes requests that execute the adapter. Full-page caches can bypass WordPress and its server beacon. Property-level reporting depends on catalog configuration and backend support; Contract 1.1 identifier resolution and generic conversions are separate from the Contract 1.0 integration documented here.
