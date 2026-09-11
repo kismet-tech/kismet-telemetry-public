@@ -1,0 +1,13 @@
+{
+  "version": "1.2.0",
+  "sha256": "b20c243e4fa25f9f24ad6c8a7b711936cce76d1fb098e23d5249db3dbc53e1f7",
+  "integrity": "sha384-++52IV6kXS7WPv36WDWF48TMzqC+lJSPjXG4e1j7IPcza0ypO8FpBn5q0I9YRCRx",
+  "url": "https://kismet.travel/telemetry/kjs/1.2.0/b20c243e4fa25f9f24ad6c8a7b711936cce76d1fb098e23d5249db3dbc53e1f7/k.js",
+  "profile": "external-consent-tag-manager",
+  "consent": {
+    "sha256": "41f3829d51c1ac668eec3290824282e278821388af0b4345e87a687ad35a1df7",
+    "integrity": "sha384-2D4kI7lVXp3b8r2guu2UByPptb3obO5R89R1HzOihVATvZbn5R5ghqakvz3ZDGTN",
+    "url": "https://kismet.travel/telemetry/kjs/1.2.0/41f3829d51c1ac668eec3290824282e278821388af0b4345e87a687ad35a1df7/consent.js"
+  },
+  "baseVersion": "1.1.0"
+}
