@@ -107,3 +107,8 @@ Resolves the visitor (threaded id, cookie, suppressed for bots and visitors with
 ## Conformance
 
 `npm test` builds the package and runs it through the contract's conformance suite with a real `NextRequest` and `NextResponse`, plus unit tests for the seed component and the header contract with the layout.
+
+
+## Returning-visitor recognition
+
+Version 1.1.0 supports optional `_kid_vid` recovery for consenting visitors. See the [visitor-recognition guide](../../docs/visitor-recognition.md) for the server-side setting, consent integration and validation requirements.

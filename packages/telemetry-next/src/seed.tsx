@@ -24,6 +24,8 @@ export interface KismetSeedScriptsProps {
     kidSid: string | null;
     suppressed: boolean;
     kjsUrl?: string;
+    visitorRecognition?: boolean;
+    visitorEndpoint?: string;
 }
 
 /**
@@ -35,6 +37,8 @@ export function kismetSeedInline({
     kidSid,
     suppressed,
     kjsUrl,
+    visitorRecognition,
+    visitorEndpoint = '/__kismet/visitor',
 }: KismetSeedScriptsProps): string {
     const seed = renderSeedScript({ kidSid, suppressed });
     if (!seed) return '';
@@ -43,6 +47,9 @@ export function kismetSeedInline({
     const src = `${kjsUrl || DEFAULT_KJS_URL}?c=${encodeURIComponent(collectionSlug)}`;
     return (
         assignment +
+        (visitorRecognition && /^\/(?!\/)[A-Za-z0-9/_-]+$/.test(visitorEndpoint)
+            ? `(function(){fetch(${JSON.stringify(visitorEndpoint).replace(/</g, '\\u003c')},{credentials:'same-origin',cache:'no-store',headers:{'x-kismet-visitor':'1'}}).catch(function(){});})();`
+            : '') +
         `(function(){var s=document.createElement('script');s.async=true;s.src=${JSON.stringify(src)};` +
         `(document.head||document.documentElement).appendChild(s);})();`
     );
@@ -70,6 +77,8 @@ export async function KismetSeed({
             kidSid={h.get(SEED_HEADERS.kidSid)}
             suppressed={h.get(SEED_HEADERS.suppressed) === '1'}
             kjsUrl={kjsUrl}
+            visitorRecognition={!!h.get('x-kismet-visitor-recognition')}
+            visitorEndpoint={h.get('x-kismet-visitor-recognition') || undefined}
         />
     );
 }

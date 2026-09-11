@@ -17,12 +17,12 @@ Kismet Telemetry connects page visits, AI crawler requests and completed booking
 
 | Integration | Package | Availability |
 | --- | --- | --- |
-| JavaScript core | [`@kismet-tech/telemetry`](https://www.npmjs.com/package/@kismet-tech/telemetry) | npm 1.0.1 |
-| Next.js | [`@kismet-tech/telemetry-next`](https://www.npmjs.com/package/@kismet-tech/telemetry-next) | npm 1.0.1 |
+| JavaScript core | [`@kismet-tech/telemetry`](https://www.npmjs.com/package/@kismet-tech/telemetry) | npm 1.1.0 |
+| Next.js | [`@kismet-tech/telemetry-next`](https://www.npmjs.com/package/@kismet-tech/telemetry-next) | npm 1.1.0 |
 | Node.js | [`@kismet-tech/telemetry-node`](https://www.npmjs.com/package/@kismet-tech/telemetry-node) | npm 1.0.1 |
-| WordPress | [Download plugin ZIP](https://github.com/kismet-tech/kismet-telemetry-public/releases/download/telemetry-wordpress-v1.0.1/kismet-telemetry-1.0.1.zip) | 1.0.1; local validation complete, site acceptance required |
+| WordPress | [Download plugin ZIP](https://github.com/kismet-tech/kismet-telemetry-public/releases/download/telemetry-wordpress-v1.1.0/kismet-telemetry-1.1.0.zip) | 1.1.0; local validation complete, site acceptance required |
 
-This repository contains the reviewed 1.0.1 source. The npm packages and WordPress plugin are available as version 1.0.1. Django support is planned.
+This repository contains the reviewed 1.1.0 source. The core, Next.js adapter and WordPress plugin use version 1.1.0. The Node.js adapter remains at 1.0.1. Django support is planned.
 
 ## Getting started
 
@@ -33,16 +33,20 @@ This repository contains the reviewed 1.0.1 source. The npm packages and WordPre
 For Next.js:
 
 ```sh
-npm install @kismet-tech/telemetry@1.0.1 @kismet-tech/telemetry-next@1.0.1
+npm install @kismet-tech/telemetry@1.1.0 @kismet-tech/telemetry-next@1.1.0
 ```
 
 For Node.js:
 
 ```sh
-npm install @kismet-tech/telemetry@1.0.1 @kismet-tech/telemetry-node@1.0.1
+npm install @kismet-tech/telemetry@1.1.0 @kismet-tech/telemetry-node@1.0.1
 ```
 
 See the [Next.js guide](packages/telemetry-next/README.md), [Node.js guide](packages/telemetry-node/README.md), or [WordPress and Next.js integration guide](docs/install-wordpress-plus-nextjs.md) for configuration and booking-bridge examples. Installing a package alone does not configure tracking.
+
+## Returning visitors
+
+Next.js and WordPress support an opt-in `_kid_vid` cookie that links later sessions for consenting visitors. Enable the feature after Kismet configures your collection, following the [visitor-recognition guide](docs/visitor-recognition.md). Browser policies and cookie deletion can shorten its lifetime.
 
 ## Data and integration boundaries
 

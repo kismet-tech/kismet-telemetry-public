@@ -82,7 +82,7 @@ ok($r['tier'] === 'minted' && preg_match(KISMET_TELEMETRY_KID_MINT_RE, $r['kid_s
 
 // Resolve body: declared names, click ids, landing URL, no ipHash
 $b = kismet_telemetry_resolve_body(['collection' => 'sea-view-stays', 'origin' => 'https://www.example.co.uk', 'landing_url' => 'https://www.example.co.uk/about?gclid=Cj0abc&fbclid=IwAR0x&utm_source=chatgpt', 'ip' => '203.0.113.7', 'ua' => 'UA', 'accept_language' => 'en-GB', 'referrer' => 'https://chatgpt.com/', 'proposed' => 'kid_Ab3dE9xZ', 'threaded' => null, 'cookie_sid' => null, 'cookie_vid' => null]);
-$allowed = ['collectionSlug','vrSlug','origin','proposedKidSid','threadedKidSid','cookieKidSid','cookieKidVid','ip','userAgent','acceptLanguage','referrer','gclid','gbraid','wbraid','gadCampaignId','fbclid','landingUrl'];
+$allowed = ['visitorConsent','collectionSlug','vrSlug','origin','proposedKidSid','threadedKidSid','cookieKidSid','cookieKidVid','ip','userAgent','acceptLanguage','referrer','gclid','gbraid','wbraid','gadCampaignId','fbclid','landingUrl'];
 ok(count(array_diff(array_keys($b), $allowed)) === 0, 'resolve body: only declared names');
 ok($b['gclid'] === 'Cj0abc' && $b['fbclid'] === 'IwAR0x' && $b['proposedKidSid'] === 'kid_Ab3dE9xZ' && !array_key_exists('threadedKidSid', $b) && !isset($b['ipHash']), 'resolve body: click ids, proposed id, no ipHash');
 ok(kismet_telemetry_click_ids('gclid=' . str_repeat('a', 600))['gclid'] === null, 'click ids: length guard');
@@ -118,6 +118,8 @@ ok(strpos($js, 'kismet_telemetry_anchor') !== false && strpos($js, 'ctk_') === f
 
 // Conversion validation
 ok(kismet_telemetry_valid_confirmation_code('EX-48213') && !kismet_telemetry_valid_confirmation_code('platform') && !kismet_telemetry_valid_confirmation_code('12345'), 'confirmation code rule');
+
+ok(kismet_telemetry_valid_vid('vid_' . str_repeat('a', 64)) !== null, 'opaque visitor token grammar');
 
 echo "\n$count checks, $fails failed\n";
 exit($fails === 0 ? 0 : 1);

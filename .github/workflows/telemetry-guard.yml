@@ -89,6 +89,13 @@ jobs:
       - name: Install
         run: npm ci
 
+      - name: Test against the core from this checkout
+        run: |
+          npm ci --prefix ../telemetry
+          npm run build --prefix ../telemetry
+          (cd ../telemetry && npm pack --ignore-scripts --pack-destination "$RUNNER_TEMP")
+          npm install --no-save --package-lock=false "$RUNNER_TEMP"/kismet-tech-telemetry-*.tgz
+
       - name: Typecheck
         run: npm run typecheck
 
@@ -117,6 +124,13 @@ jobs:
 
       - name: Install
         run: npm ci
+
+      - name: Test against the core from this checkout
+        run: |
+          npm ci --prefix ../telemetry
+          npm run build --prefix ../telemetry
+          (cd ../telemetry && npm pack --ignore-scripts --pack-destination "$RUNNER_TEMP")
+          npm install --no-save --package-lock=false "$RUNNER_TEMP"/kismet-tech-telemetry-*.tgz
 
       - name: Typecheck
         run: npm run typecheck
@@ -157,6 +171,9 @@ jobs:
 
       - name: Pure tests (no WordPress)
         run: php tests/pure.test.php
+
+      - name: Browser bootstrap regression tests
+        run: node --test tests/bootstrap.test.mjs
 
       - name: Build zip
         run: bin/build-zip.sh

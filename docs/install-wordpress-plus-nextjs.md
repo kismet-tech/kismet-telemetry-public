@@ -55,3 +55,8 @@ Carry the checkout request's `_kid_sid` through queues/callbacks to confirmation
 6. Make the telemetry receiver unavailable; verify pages and checkout still work. Measure overhead and check no personal seed leaks through shared caching.
 
 A local WordPress/Next replica prepares the integration. Final acceptance needs the actual staging site or an agreed faithful replica of routing, caching, consent and checkout. Kismet can supply mappings/snippets, or prepare a PR after a separate repository invitation.
+
+
+## Returning-visitor recognition
+
+Version 1.1.0 supports optional `_kid_vid` recovery for consenting visitors. See the [visitor-recognition guide](visitor-recognition.md) for the server-side setting, consent integration and validation requirements.

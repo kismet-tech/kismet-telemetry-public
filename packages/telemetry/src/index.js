@@ -136,3 +136,5 @@ export {
  * @typedef {import('./conversion.js').QuoteCaptureBody} QuoteCaptureBody
  * @typedef {import('./conversion.js').ConversionResult} ConversionResult
  */
+
+export { resolveVisitorCookie } from './resolve.js';

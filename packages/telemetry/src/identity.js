@@ -148,6 +148,7 @@ export function resolveAnchorEndpoint(env) {
  *   threadedKidSid?: string | null,
  *   cookieKidSid?: string | null,
  *   cookieKidVid?: string | null,
+ *   visitorConsent?: boolean,
  *   ip?: string | null,
  *   userAgent?: string | null,
  *   acceptLanguage?: string | null,
@@ -170,6 +171,7 @@ export function buildResolveAnchorBody(signals) {
         threadedKidSid: signals.threadedKidSid,
         cookieKidSid: signals.cookieKidSid,
         cookieKidVid: signals.cookieKidVid,
+        visitorConsent: signals.visitorConsent,
         // L1 fingerprint signals — the VISITOR's values (this request's headers ARE
         // the visitor's at the edge). Let the authority dedupe/merge server-side.
         ip: signals.ip || null,

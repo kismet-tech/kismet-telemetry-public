@@ -24,7 +24,7 @@ import {
 
 /** What the authority adopts when WE propose: exactly eight. */
 export const KID_SID_MINT_RE = /^kid_[A-Za-z0-9]{8}$/;
-export const KID_VID_RE = /^[A-Za-z0-9_]{6,64}$/;
+export const KID_VID_RE = /^(?:vid_[a-f0-9]{64}|[A-Za-z0-9_]{6,64})$/;
 
 export const RESOLVE_TIMEOUT_MS = 1500;
 export const RECONCILE_TIMEOUT_MS = 3000;
@@ -255,4 +255,41 @@ export async function resolveVisitor(input) {
         reconcile,
         resolveBody: body,
     };
+}
+
+/**
+ * Same-origin browser follow-up only. Page middleware must not await this call.
+ * Requires an explicit consent hook; geography alone does not enable recognition.
+ * @param {ResolveInput} input
+ * @returns {Promise<ResolveResult>}
+ */
+export async function resolveVisitorCookie(input) {
+    const local = await resolveVisitor({
+        ...input,
+        trackingKey: '',
+        authorityFirst: false,
+        consent: input.consent || (() => false),
+    });
+    if (local.suppressed || !local.kidSid || !input.trackingKey) return local;
+    const body = buildResolveAnchorBody({
+        collectionSlug: input.collectionSlug,
+        origin: input.url.origin,
+        proposedKidSid: local.kidSid,
+        cookieKidVid: local.kidVid,
+        visitorConsent: true,
+        landingUrl: input.url.toString(),
+        userAgent: input.headers.get('user-agent'),
+    });
+    const result = await postResolveAnchor(
+        {
+            COLLECTION_KEY: input.trackingKey,
+            ...(input.resolveEndpoint ? { RESOLVE_ANCHOR_ENDPOINT: input.resolveEndpoint } : {}),
+            ...(input.apiOrigin ? { KISMET_API_ORIGIN: input.apiOrigin } : {}),
+        },
+        body,
+        { timeoutMs: input.timeouts?.resolve ?? 1000 }
+    );
+    // Never change the session already used for page events.
+    const vid = result?.kidSid === local.kidSid ? validKidVid(result.kidVid) : null;
+    return { ...local, kidVid: vid, setVid: !!vid, resolveBody: body };
 }

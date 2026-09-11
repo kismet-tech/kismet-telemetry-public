@@ -1,0 +1,14 @@
+services:
+  wordpress:
+    environment:
+      WORDPRESS_CONFIG_EXTRA: |
+        define('WP_ENVIRONMENT_TYPE', 'local');
+        define('WP_HOME', 'http://telemetry.test:8599');
+        define('WP_SITEURL', 'http://telemetry.test:8599');
+        define('WP_HTTP_BLOCK_EXTERNAL', true);
+        define('WP_ACCESSIBLE_HOSTS', 'host.docker.internal');
+        define('KISMET_TELEMETRY_VISITOR_RECOGNITION', true);
+        define('KISMET_TELEMETRY_RESOLVE_URL', 'http://host.docker.internal:8798/v1/identity/resolve-anchor');
+        define('KISMET_TELEMETRY_TRACK_URL', 'http://host.docker.internal:8798/api/track');
+        define('KISMET_TELEMETRY_API_ORIGIN', 'http://host.docker.internal:8798');
+        define('KISMET_TELEMETRY_KJS_URL', '/lab-k.js');

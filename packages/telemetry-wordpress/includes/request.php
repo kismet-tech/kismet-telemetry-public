@@ -7,7 +7,7 @@ defined('ABSPATH') || exit;
 
 const KISMET_TELEMETRY_KID_READ_RE = '/^kid_[A-Za-z0-9]{6,40}$/';
 const KISMET_TELEMETRY_KID_MINT_RE = '/^kid_[A-Za-z0-9]{8}$/';
-const KISMET_TELEMETRY_VID_RE      = '/^[A-Za-z0-9_]{6,64}$/';
+const KISMET_TELEMETRY_VID_RE      = '/^(?:vid_[a-f0-9]{64}|[A-Za-z0-9_]{6,64})$/';
 const KISMET_TELEMETRY_CLICK_ID_RE = '/^[A-Za-z0-9._-]{1,512}$/';
 const KISMET_TELEMETRY_SID_MAX_AGE = 7776000;   // 90 days
 const KISMET_TELEMETRY_VID_MAX_AGE = 34560000;  // about 400 days

@@ -51,6 +51,7 @@ function kismet_telemetry_resolve_body(array $in): array {
         'threadedKidSid' => $in['threaded'] ?? null,
         'cookieKidSid'   => $in['cookie_sid'] ?? null,
         'cookieKidVid'   => $in['cookie_vid'] ?? null,
+        'visitorConsent' => ($in['visitor_consent'] ?? false) === true,
         'ip'             => $in['ip'] ?? null,
         'userAgent'      => $in['ua'] ?? null,
         'acceptLanguage' => $in['accept_language'] ?? null,
@@ -143,10 +144,37 @@ function kismet_telemetry_anchor_ajax(): void {
     ]);
 
     if ($r['suppressed']) {
+        kismet_telemetry_set_cookie('_kid_vid', '', 0);
+        kismet_telemetry_set_cookie('_kid_sid', '', 0);
         wp_send_json(['suppressed' => 1], 200);
     }
     if ($r['set_sid'] && $r['kid_sid'] !== null) {
         kismet_telemetry_set_cookie('_kid_sid', $r['kid_sid'], KISMET_TELEMETRY_SID_MAX_AGE);
+    }
+    // This AJAX request runs after page rendering. Await only its bounded authority call.
+    $recognition = defined('KISMET_TELEMETRY_VISITOR_RECOGNITION') && KISMET_TELEMETRY_VISITOR_RECOGNITION === true;
+    $explicit_consent = kismet_telemetry_opt('consent_mode', 'geo') === 'cookie' || has_filter('kismet_telemetry_should_set_cookies');
+    if ($recognition && $explicit_consent && $consented) {
+        $response = wp_remote_post(KISMET_TELEMETRY_RESOLVE_URL, [
+            'timeout' => 1, 'blocking' => true,
+            'headers' => ['Content-Type' => 'application/json', 'X-Kismet-Tracking-Key' => kismet_telemetry_tracking_key()],
+            'body' => wp_json_encode(kismet_telemetry_resolve_body([
+                'collection' => kismet_telemetry_collection(),
+                'origin' => (kismet_telemetry_is_https() ? 'https://' : 'http://') . kismet_telemetry_request_host(),
+                'landing_url' => $page_url, 'proposed' => $r['kid_sid'],
+                'cookie_vid' => $r['kid_vid'], 'visitor_consent' => true, 'ua' => $ua,
+            ])),
+        ]);
+        if (!is_wp_error($response) && wp_remote_retrieve_response_code($response) === 200) {
+            $resolved = json_decode(wp_remote_retrieve_body($response), true);
+            if (is_array($resolved) && ($resolved['kid_sid'] ?? null) === $r['kid_sid']) {
+                $vid = kismet_telemetry_valid_vid($resolved['kid_vid'] ?? null);
+                if ($vid !== null) {
+                    $r['kid_vid'] = $vid;
+                    kismet_telemetry_set_cookie('_kid_vid', $vid, KISMET_TELEMETRY_VID_MAX_AGE);
+                }
+            }
+        }
     }
     if ($r['reconcile'] !== null) {
         kismet_telemetry_reconcile(kismet_telemetry_resolve_body([

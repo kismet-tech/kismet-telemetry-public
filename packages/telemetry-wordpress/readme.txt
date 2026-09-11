@@ -3,7 +3,7 @@ Contributors: kismettech
 Tags: analytics, attribution, ai, tracking, first-party
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.0.1
+Stable tag: 1.1.0
 License: Apache-2.0
 License URI: https://www.apache.org/licenses/LICENSE-2.0
 
@@ -31,7 +31,10 @@ Docs: https://developers.kismet.travel/telemetry/
 
 == Changelog ==
 
-= 1.0.1 (unreleased) =
+= 1.1.0 =
+Opt-in returning-visitor recognition with explicit consent and cache-safe cookie recovery.
+
+= 1.0.1 =
 * Add license and notices; clarify validation status. Runtime behavior unchanged.
 
 = 1.0.0 =

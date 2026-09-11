@@ -21,6 +21,7 @@ import {
     publicUrl,
     readCountry,
     resolveVisitor,
+    resolveVisitorCookie,
     SEED_HEADERS,
     SID_COOKIE,
     SID_MAX_AGE,
@@ -55,6 +56,8 @@ export const KISMET_MATCHER = [
 export interface KismetTelemetryConfig {
     /** The collection this site's pages belong to. */
     collectionSlug: string;
+    /** Enable the same-origin visitor-cookie follow-up. Requires a consent hook. */
+    visitorRecognition?: boolean;
     /** The collection's `ctk_` tracking key. Server-side only; read it from the environment. */
     trackingKey: string;
     /** Which URLs are properties, search, the checkout path, agent surfaces. */
@@ -124,6 +127,62 @@ export function createKismetMiddleware(cfg: KismetTelemetryConfig) {
         try {
             const headers = request.headers;
             const url = publicUrl(headers, request.nextUrl);
+            if (request.nextUrl.pathname === '/__kismet/visitor') {
+                const noStore = { 'cache-control': 'private, no-store' };
+                if (!cfg.visitorRecognition)
+                    return new NextResponse(null, { status: 404, headers: noStore });
+                if (
+                    request.method !== 'GET' ||
+                    headers.get('x-kismet-visitor') !== '1' ||
+                    (headers.get('origin') && headers.get('origin') !== url.origin) ||
+                    (headers.get('sec-fetch-site') &&
+                        headers.get('sec-fetch-site') !== 'same-origin')
+                ) {
+                    return new NextResponse(null, { status: 403, headers: noStore });
+                }
+                const visitor = await resolveVisitorCookie({
+                    url,
+                    headers,
+                    collectionSlug: cfg.collectionSlug,
+                    trackingKey: cfg.trackingKey,
+                    consent: cfg.consent,
+                    suppressGenericClients: cfg.suppressGenericClients,
+                    resolveEndpoint: cfg.endpoints?.resolveAnchor,
+                    apiOrigin: cfg.endpoints?.apiOrigin,
+                });
+                const response = NextResponse.json({ ok: true }, { headers: noStore });
+                const domain = cookieDomainFor(url.host, cfg.cookieDomain ?? null);
+                const secure = isHttps(headers, url);
+                if (visitor.kidSid && visitor.setSid)
+                    response.headers.append(
+                        'set-cookie',
+                        buildCookie(SID_COOKIE, visitor.kidSid, {
+                            maxAge: SID_MAX_AGE,
+                            domain,
+                            secure,
+                        })
+                    );
+                if (visitor.kidVid && visitor.setVid)
+                    response.headers.append(
+                        'set-cookie',
+                        buildCookie(VID_COOKIE, visitor.kidVid, {
+                            maxAge: VID_MAX_AGE,
+                            domain,
+                            secure,
+                        })
+                    );
+                if (visitor.suppressed) {
+                    response.headers.append(
+                        'set-cookie',
+                        buildCookie(VID_COOKIE, '', { maxAge: 0, domain, secure })
+                    );
+                    response.headers.append(
+                        'set-cookie',
+                        buildCookie(SID_COOKIE, '', { maxAge: 0, domain, secure })
+                    );
+                }
+                return response;
+            }
             const classification = classifyRequest(url, cfg.profile, {
                 accept: headers.get('accept'),
                 method: request.method,
@@ -182,6 +241,14 @@ export function createKismetMiddleware(cfg: KismetTelemetryConfig) {
 
             // The seed reaches the layout as request headers.
             const requestHeaders = new Headers(headers);
+            requestHeaders.delete(SEED_HEADERS.kidSid);
+            requestHeaders.delete(SEED_HEADERS.suppressed);
+            requestHeaders.delete('x-kismet-visitor-recognition');
+            if (cfg.visitorRecognition)
+                requestHeaders.set(
+                    'x-kismet-visitor-recognition',
+                    `${request.nextUrl.basePath || ''}/__kismet/visitor`
+                );
             if (visitor.kidSid) requestHeaders.set(SEED_HEADERS.kidSid, visitor.kidSid);
             if (visitor.suppressed) requestHeaders.set(SEED_HEADERS.suppressed, '1');
             requestHeaders.set(SEED_HEADERS.tier, visitor.tier);
@@ -217,6 +284,16 @@ export function createKismetMiddleware(cfg: KismetTelemetryConfig) {
                 response.headers.append(
                     'set-cookie',
                     buildCookie(VID_COOKIE, visitor.kidVid, { maxAge: VID_MAX_AGE, domain, secure })
+                );
+            }
+            if (cfg.visitorRecognition && visitor.suppressed) {
+                response.headers.append(
+                    'set-cookie',
+                    buildCookie(VID_COOKIE, '', { maxAge: 0, domain, secure })
+                );
+                response.headers.append(
+                    'set-cookie',
+                    buildCookie(SID_COOKIE, '', { maxAge: 0, domain, secure })
                 );
             }
             return response;

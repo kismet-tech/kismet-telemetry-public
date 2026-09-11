@@ -1,6 +1,12 @@
 # Changelog
 
-## 1.0.1 (unreleased)
+## 1.1.0
+
+Conforms to contract 1.0 with the optional visitor-recognition extension.
+
+- Add opt-in returning-visitor recognition through a same-origin middleware endpoint. The page seed performs the follow-up automatically; consent withdrawal clears both identity cookies.
+
+## 1.0.1 (2026-09-10)
 
 - Apply current consent before adopting an existing identity and omit the browser tracker when identity is suppressed.
 

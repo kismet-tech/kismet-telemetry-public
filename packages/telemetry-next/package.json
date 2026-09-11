@@ -1,6 +1,6 @@
 {
   "name": "@kismet-tech/telemetry-next",
-  "version": "1.0.1",
+  "version": "1.1.0",
   "description": "Kismet Telemetry for Next.js: createKismetMiddleware() on the @kismet-tech/telemetry core (contract 1.0), a <KismetSeed /> for the root layout, render-time server events, booking-bridge and quote-capture helpers, and the browser helpers. Ships with the contract conformance suite.",
   "type": "module",
   "sideEffects": false,
@@ -62,7 +62,7 @@
   "author": "Kismet Technologies",
   "license": "Apache-2.0",
   "dependencies": {
-    "@kismet-tech/telemetry": "^1.0.0"
+    "@kismet-tech/telemetry": "^1.1.0"
   },
   "peerDependencies": {
     "next": ">=14.2.0",

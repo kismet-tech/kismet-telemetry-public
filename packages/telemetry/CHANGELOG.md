@@ -1,6 +1,12 @@
 # Changelog
 
-## 1.0.1 (unreleased)
+## 1.1.0
+
+Conforms to contract 1.0 with the optional visitor-recognition extension.
+
+- Add consent-gated visitor cookie recovery through the Kismet authority, with bounded follow-up requests and support for long opaque visitor tokens.
+
+## 1.0.1 (2026-09-10)
 
 - Apply current consent before adopting an existing identity and omit the browser tracker when identity is suppressed.
 

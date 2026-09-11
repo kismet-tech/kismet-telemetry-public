@@ -40,3 +40,8 @@ bin/build-zip.sh                            # dist/kismet-telemetry-<version>.zi
 ```
 
 The HTTP conformance run (contract section 15) needs a WordPress: the `kismet-local-wp` docker rig with this directory mounted as the plugin, `KISMET_TELEMETRY_RESOLVE_URL` and `KISMET_TELEMETRY_TRACK_URL` pointed at the stub authority and relay from `@kismet-tech/telemetry/conformance`, and a driver that forwards each `Request` to `http://localhost:8480` with the same headers. The HTTP harness and real staging smoke are both still pending. Pure-function tests alone do not verify a real WordPress installation.
+
+
+## Returning-visitor recognition
+
+Version 1.1.0 supports optional `_kid_vid` recovery for consenting visitors. See the [visitor-recognition guide](../../docs/visitor-recognition.md) for the server-side setting, consent integration and validation requirements.

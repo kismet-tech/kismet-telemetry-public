@@ -1,6 +1,14 @@
 # Changelog
 
-## 1.0.1 (unreleased)
+## 1.1.0
+
+Conforms to contract 1.0 with optional visitor recognition.
+
+- Add opt-in returning-visitor recognition through the existing cache-safe AJAX anchor, with explicit consent and bounded authority requests.
+- Clear session and visitor cookies when consent is withdrawn.
+- Validate browser restart, new-session recovery and WordPress/Next.js continuity in a local browser fixture.
+
+## 1.0.1 (2026-09-10)
 
 - Withhold the browser tracker on suppressed sessions, including anchor failure, to prevent retained cookies from being reused by the browser tracker.
 

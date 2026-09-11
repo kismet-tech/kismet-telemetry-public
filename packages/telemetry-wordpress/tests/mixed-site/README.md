@@ -24,3 +24,11 @@ Run `node browser.cjs`. The runner maps `telemetry.test` to loopback without mod
 The scenarios cover denied and consented visits, WordPress-to-Next session continuity, simulated completed-booking attribution, consent withdrawal on each surface, two visitors receiving identical cached HTML, and anchor failure. The cache scenario replays captured HTML; it is not a full CDN or WordPress cache-plugin test.
 
 The downloaded tracker runs with a minimal mocked configuration response. This exercises identity and beacon behavior; it does not validate production configuration, delivery, analytics providers or reporting. Consent changes are tested across navigation. Immediate revocation within an already loaded page, HTTPS/proxy topology and the customer's actual consent manager and booking engine require separate staging acceptance.
+
+## PostgreSQL-backed visitor recovery
+
+The private infrastructure repository provides `tests/visitor-recognition/lab-server.ts`. Start it against a disposable local `visitor_test` PostgreSQL database with `PG_MODULE` and `VISITOR_TEST_DATABASE_URL` as documented there. It listens on 8798 and uses the real recognition store plus a minimal test HTTP/session/ingest shell.
+
+Apply `integration/visitor.override.yml` with the base Compose file. It configures the existing local fixture for the visitor authority through `host.docker.internal` and the shared origin on port 8599. Re-run setup.php using the WordPress container so its tracking-key encryption uses the current site URL. Run the Next fixture with `VISITOR_LAB=1` and port 8600. Proxy `/app` to 8600 and other paths to WordPress 8496 on loopback port 8599, preserving the browser Host header. All credentials here are disposable test values.
+
+Install candidate core and Next tarballs as above; the runtime must include the new helper, not registry 1.0.1. Run `visitor-browser.cjs` with `PLAYWRIGHT_MODULE`, `KISMET_TEST_KJS_PATH` and optionally `VISITOR_RESULTS_PATH`. It creates separate Chrome profiles and verifies nine recovery/failure scenarios. It uses Chrome on macOS and intercepts external browser traffic. Never direct this harness at a customer or production database.
