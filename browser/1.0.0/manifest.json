@@ -1,0 +1,8 @@
+{
+  "version": "1.0.0",
+  "sha256": "1b99da0860e5e80a3ae84c970ff1725916123c97694fcd1400f939f92007ec11",
+  "integrity": "sha384-ZnAv3qLHY34352QLPFyYH+7h4dmD75gpF2Hg8ckHts7TY113S70hRy8t+ehEIQP4",
+  "url": "https://kismet.travel/telemetry/kjs/1.0.0/1b99da0860e5e80a3ae84c970ff1725916123c97694fcd1400f939f92007ec11/k.js",
+  "profile": "no-third-party-script-loading",
+  "sourceCommit": "1a0870f6989c3f2dc81c6989e800b1e1094d9e92"
+}

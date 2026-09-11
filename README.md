@@ -74,3 +74,7 @@ Bot classification uses the versioned vocabulary in [`bot-patterns.json`](packag
 ## License
 
 The source in this repository is licensed under [Apache-2.0](LICENSE). See [NOTICE](NOTICE) for attribution. Previously published npm 1.0.0 artifacts retain their original license metadata, and third-party dependencies retain their own licenses.
+
+## Pinned browser tracker
+
+For review before browser-code changes, use the [pinned browser tracker](docs/pinned-browser-tracker.md). Its release URL is selected independently of the npm adapter version. The exact readable source and checksums are in [browser/1.0.0](browser/1.0.0).

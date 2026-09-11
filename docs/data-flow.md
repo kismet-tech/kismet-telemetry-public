@@ -17,7 +17,7 @@ The [contract](CONTRACT.md) defines the payloads. Endpoint overrides support tes
 
 ## Browser requests
 
-The seed loads `https://kismet.travel/k.js?c=<collection>` into the browser. That script adopts the session and handles browser interactions, including custom events from the browser helpers. It is separately served: pinning the npm adapter does not pin the contents of `k.js`. The hosted ingest, identity service and browser tracker are separate from this adapter repository.
+The seed loads `https://kismet.travel/k.js?c=<collection>` into the browser. That script adopts the session and handles browser interactions, including custom events from the browser helpers. It is separately served: pinning the npm adapter does not pin the contents of `k.js`. Use the [pinned browser tracker](./pinned-browser-tracker.md) to select fixed, reviewable browser code. The hosted ingest and identity service remain live backend services.
 
 WordPress also makes a same-origin request to its `kismet_telemetry_anchor` AJAX action for a cold visitor. Its bootstrap is constant across cached pages; the per-visitor AJAX response must remain uncached.
 
