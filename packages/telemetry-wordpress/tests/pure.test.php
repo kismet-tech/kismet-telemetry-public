@@ -52,7 +52,10 @@ ok(kismet_telemetry_cookie_domain_for('book.example.com', 'example.com') === '.e
 
 // Consent
 $cookies = ['CookieConsent' => 'statistics%3Atrue'];
-ok(kismet_telemetry_consent_decision('geo', '', [], '', '') === true, 'consent geo: unknown country allowed');
+foreach (['', 'XX', 'T1', 'ZZ', 'invalid'] as $country) {
+    ok(kismet_telemetry_country_allows($country) === false, 'unknown country denied: ' . $country);
+}
+ok(kismet_telemetry_consent_decision('geo', '', [], '', '') === false, 'consent geo: unknown country denied');
 ok(kismet_telemetry_consent_decision('geo', 'GB', [], '', '') === false, 'consent geo: GB denied');
 ok(kismet_telemetry_consent_decision('geo', 'US', [], '', '') === true, 'consent geo: US allowed');
 ok(kismet_telemetry_consent_decision('always', 'GB', [], '', '') === true, 'consent always');

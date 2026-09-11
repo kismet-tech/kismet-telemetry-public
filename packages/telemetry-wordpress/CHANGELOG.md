@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.1
+
+- Deny identity cookies and browser tracker loading when country information is missing or unknown unless the site supplies explicit consent. Sites without trusted country headers must wire their consent manager.
+
 ## 1.1.0
 
 Conforms to contract 1.0 with optional visitor recognition.

@@ -2,13 +2,13 @@
 
 For WordPress at `example.co.uk/` and a Next.js App Router app at `/stays/` with its own checkout. Both adapters use contract 1.0 and share a cookie domain. The standalone plugin contains tracking only; it does not require Elements or replace site pages.
 
-Next.js 1.0.0 is published. The WordPress 1.0.0 zip has been released, but real WordPress HTTP conformance and staging validation are still pending. Treat it as a review/staging candidate until those checks pass. Django is planned.
+Next.js 1.1.0 and the standalone WordPress 1.1.1 plugin are available. Local integration validation is complete; confirm the actual site's consent manager, caching and route mapping during staging acceptance. Django is planned.
 
 ## Review and configuration
 
 Read [what is installed and sent](data-flow.md), then the [contract](CONTRACT.md). Obtain the collection slug and server-only tracking key from Kismet and register production/staging hostnames. Confirm the actual Next.js router/version and consent manager before selecting integration code.
 
-Use the same cookie domain, for example `.example.co.uk`, on both surfaces. Wire consent on both: the geography fallback is insufficient without a country header.
+Use the same cookie domain, for example `.example.co.uk`, on both surfaces. Wire consent on both: WordPress 1.1.1 denies missing geography by default. Configure an explicit default-denied hook on the npm adapters, and grant only on your consent manager's positive analytics signal.
 
 ## WordPress
 

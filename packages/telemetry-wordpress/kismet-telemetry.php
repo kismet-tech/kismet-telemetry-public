@@ -3,7 +3,7 @@
  * Plugin Name: Kismet Telemetry
  * Plugin URI:  https://developers.kismet.travel/telemetry/
  * Description: Server-side tracking for your own WordPress site: a first-party visitor session on your domain, every page and AI crawler visit recorded server-side, and bookings joined to the visit. Implements the Kismet tracking contract v1.0. Tracking only, no page elements.
- * Version:     1.1.0
+ * Version:     1.1.1
  * Requires at least: 6.0
  * Requires PHP: 7.4
  * Author:      Kismet Technologies
@@ -21,7 +21,7 @@
 
 defined('ABSPATH') || exit;
 
-define('KISMET_TELEMETRY_VERSION', '1.1.0');
+define('KISMET_TELEMETRY_VERSION', '1.1.1');
 define('KISMET_TELEMETRY_CONTRACT_VERSION', '1.0');
 define('KISMET_TELEMETRY_FILE', __FILE__);
 define('KISMET_TELEMETRY_DIR', __DIR__);

@@ -1,7 +1,7 @@
 <?php
 // Consent (contract section 4). Consent gates the session only, never the
 // server-plane recording. Default: a country deny list read from a platform
-// country header; unknown is allowed. Most hosts send no such header, so the
+// country header; unknown is denied. Most hosts send no such header, so the
 // site wires its consent manager through the settings (consent_mode=cookie) or
 // the `kismet_telemetry_should_set_cookies` filter.
 
@@ -24,12 +24,13 @@ function kismet_telemetry_country(): string {
     return '';
 }
 
-/** The country default: unknown allowed, listed denied. */
+/** The country default: unknown denied, listed denied. */
 function kismet_telemetry_country_allows(string $country): bool {
-    if ($country === '') {
-        return true;
+    $country = strtoupper(trim($country));
+    if (!preg_match('/^[A-Z]{2}$/', $country) || in_array($country, ['XX', 'ZZ'], true)) {
+        return false;
     }
-    return !in_array(strtoupper($country), KISMET_TELEMETRY_CONSENT_DENY, true);
+    return !in_array($country, KISMET_TELEMETRY_CONSENT_DENY, true);
 }
 
 /**
