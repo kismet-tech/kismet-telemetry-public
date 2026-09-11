@@ -75,7 +75,7 @@ Conformance: cookie names, ages, attributes and the domain rule are asserted fro
 For every page request the adapter resolves the visitor in this order and stops at the first match. Assets, the adapter's own API routes, and anything that is not a page or an agent surface are excluded before this runs.
 
 1. **Suppressed.** Bot user agent, missing user agent, or a consent-denied visitor: no id, no cookie, no network. The page seed (section 7) carries the suppression flag so k.js will not mint either.
-2. **Threaded.** `?kid_sid=<id>` on the URL and the id matches the read grammar: adopt it verbatim. Set the cookie if it differs from the current cookie. Send a non-blocking resolve-anchor with `threadedKidSid` (and `cookieKidSid` when a different cookie was present) so the authority can back-stitch the hop. This is how a session crosses domains or arrives from an email link.
+2. **Threaded.** `?kid_sid=<id>` on the URL and the id matches the read grammar: adopt it verbatim. Set the cookie if it differs from the current cookie. Send a non-blocking resolve-anchor with `threadedKidSid` (and `cookieKidSid` when a different cookie was present) so the authority receives the session identifiers for the navigation. This is how a session crosses domains or arrives from an email link.
 3. **Cookie.** `_kid_sid` present and valid: adopt it. No network.
 4. **Cold human.** No carrier. The adapter MUST produce an id without blocking the response. The v1 default is:
    - mint an id in the mint grammar,
@@ -84,7 +84,7 @@ For every page request the adapter resolves the visitor in this order and stops 
    - post the server-plane event under it,
    - reconcile it with the authority after the response is sent (`proposedKidSid`), bounded at 3,000 ms, result ignored.
 
-   An adapter MAY offer an "authority first" mode that calls resolve-anchor before responding, with no proposed id, so the authority's fingerprint tier can recover a session this browser already has elsewhere. If offered it MUST be opt-in, MUST be bounded at 1,500 ms, and MUST fall back to the local mint on any failure. It is not the default because a cold visitor should never wait on Kismet.
+   An adapter MAY offer an "authority first" mode that calls resolve-anchor before responding, with no proposed id, to request a session identifier from the authority. If offered it MUST be opt-in, MUST be bounded at 1,500 ms, and MUST fall back to the local mint on any failure. It is not the default because a cold visitor should never wait on Kismet.
 
 Fail-open means "never null for a human", not "no id". A consent-permitted human leaves with a `kid_sid`; what varies is whether the authority has heard about it yet.
 
@@ -98,7 +98,7 @@ The 1.1.0 core, Next.js and WordPress releases add a bounded visitor-cookie foll
 
 The follow-up sends `visitorConsent: true`, the established page session as `proposedKidSid`, and `cookieKidVid` when present to the tracking-key-authenticated resolve-anchor endpoint. It waits at most one second and persists the returned visitor token only when the returned session matches the page session. It does not block page rendering or replace that session. The normal page-resolution path above remains asynchronous.
 
-Kismet stores the token hash and collection-scoped visitor/session links. A valid visitor token can link a new session after loss of the session cookie; it does not authenticate a guest or authorize wallet access. Token expiry is 400 days from issuance, and browser policies or user deletion can shorten cookie persistence. Consent withdrawal clears both cookies on the next adapter request; immediate in-page withdrawal must invoke the site's consent refresh flow.
+A valid visitor token can link a new session after loss of the session cookie; it does not authenticate a guest or authorize wallet access. Token expiry is 400 days from issuance, and browser policies or user deletion can shorten cookie persistence. Consent withdrawal clears both cookies on the next adapter request; immediate in-page withdrawal must invoke the site's consent refresh flow.
 
 ## 6. Resolve-anchor (the authority)
 
@@ -106,7 +106,7 @@ Kismet stores the token hash and collection-scoped visitor/session links. A vali
 
 Headers: `Content-Type: application/json`, `X-Kismet-Tracking-Key: ctk_…`.
 
-Body. Every field is optional except `collectionSlug` and `origin`; the authority silently drops anything not listed, so an adapter MUST send exactly these names. Values are the **visitor's**, never the adapter's own request headers, and never a hash: the platform is the only hash producer.
+Body. Every field is optional except `collectionSlug` and `origin`; the authority silently drops anything not listed, so an adapter MUST send exactly these names. Values are the **visitor's**, never the adapter's own request headers. Send the original values in the documented fields without hashing them.
 
 ```json
 {
@@ -224,7 +224,7 @@ Field rules:
 | `servingDomain` | Request host with leading `www.` and port stripped. |
 | `isBot`, `botName`, `botCategory` | The shared vocabulary's verdict as a hint. Ingest re-classifies from the raw `userAgent` and its verdict wins. Categories: `training`, `search`, `commerce`, `assistant`. |
 | `userAgent` | Raw. Required for classification. |
-| `clientIp` | Raw first-hop address. Ingest computes the salted hash. Never hash at the edge, never send `ipHash`. |
+| `clientIp` | Visitor IP address from the trusted request context. Send it unmodified as `clientIp`; `ipHash` is not an accepted request field. |
 | `country`, `city`, `region` | From the platform's geo headers when available; null otherwise. |
 | `referrer` | The `Referer` header, raw. |
 
@@ -301,7 +301,7 @@ Optional. Records a price the guest saw for a stay, keyed to the session, so a r
 
 **Same registrable domain, different surfaces** (a WordPress root and a Next.js app under a path, or `www` and apex): the dotted cookie domain of section 4 is the whole mechanism. Both adapters adopt the same `_kid_sid`; whichever the visitor hit first minted it. Each surface still emits its own server-plane events and seeds its own pages.
 
-**Different domains** (a marketing site and a separately hosted booking engine): the sending side appends `?kid_sid=<id>` to the outbound link; the receiving side's rule 1 adopts it and back-stitches through the authority. k.js does this automatically for links it can see; a server-rendered link the adapter generates SHOULD append it too.
+**Different domains** (a marketing site and a separately hosted booking engine): the sending side appends `?kid_sid=<id>` to the outbound link; the receiving side adopts it using the threaded-carrier rule and reports the supplied identifiers to the authority. k.js does this automatically for links it can see; a server-rendered link the adapter generates SHOULD append it too.
 
 **Email and campaign links**: the platform's link proxy threads `?kid_sid=` on click; nothing for the adapter to do beyond rule 1.
 

@@ -2,7 +2,7 @@
 
 Available in core, Next.js and WordPress version 1.1.0; not included in 1.0.1. Enable only after Kismet confirms that the visitor authority is available for your collection.
 
-The session cookie `_kid_sid` identifies a browsing session. `_kid_vid` is an opaque, authority-issued visitor token that can link a later session after the session cookie is lost. It does not sign a guest in or authorize payment. Both cookies use the site's domain and require consent. The visitor cookie is set for up to 400 days; browser policies, deletion and private browsing can shorten that lifetime. Kismet stores a hash of the token and a collection-scoped session link.
+The session cookie `_kid_sid` identifies a browsing session. `_kid_vid` is an opaque, authority-issued visitor token that can link a later session after the session cookie is lost. It does not sign a guest in or authorize payment. Both cookies use the site's domain and require consent. The visitor cookie is set for up to 400 days; browser policies, deletion and private browsing can shorten that lifetime. Recognition is scoped to the collection.
 
 ## Next.js
 
@@ -20,6 +20,6 @@ The existing cache-safe AJAX anchor performs the bounded authority request and s
 
 ## Validation and limits
 
-Local Chrome tests exercise WordPress, installed Next.js release tarballs and the actual recognition store on PostgreSQL. The HTTP/session/ingest shell is a test harness, not the deployed production API. Tests cover browser restart, loss of only the session cookie, WordPress/Next/WordPress continuity, www/apex cookie sharing, incoming server events, authority outage, consent withdrawal and independent visitors.
+Local Chrome tests exercise WordPress and installed Next.js release tarballs against a local test service. These tests do not establish acceptance on a customer site. Tests cover browser restart, loss of only the session cookie, WordPress/Next/WordPress continuity, www/apex cookie sharing, incoming server events, authority outage, consent withdrawal and independent visitors.
 
 Before installation approval, Kismet must validate the deployed authority, collection configuration and ingestion pipeline. Customer staging must confirm actual consent-manager behavior, routing/cache configuration and booking matching. URL mapping alone cannot establish an authoritative reservation-to-visitor join.
