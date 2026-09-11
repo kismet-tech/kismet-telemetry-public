@@ -86,7 +86,7 @@ export async function handle(request, ctx /* { waitUntil } */) {
 
 ## Consent
 
-The default gate is a country deny list read from the `cf-ipcountry` or `x-vercel-ip-country` header. Off Cloudflare and Vercel there is no header and the default sets cookies for everyone. Pass a `consent` hook that reads your consent manager's state; `consentFromCookie(name, pattern)` covers the common case. Consent gates the session only. Page views and crawler fetches are recorded either way, with a null session.
+The default gate is a country deny list read from the `cf-ipcountry` or `x-vercel-ip-country` header. Missing or unknown geography is denied by default from core 1.1.1 onward. Pass a `consent` hook that reads your consent manager's state; `consentFromCookie(name, pattern)` covers the common case. Consent gates the session only. Page views and crawler fetches are recorded either way, with a null session.
 
 ## Funnel signals
 

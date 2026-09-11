@@ -57,7 +57,7 @@ export interface KismetTelemetryConfig {
     /**
      * The site's consent decision. Without it the country default applies, which
      * reads a Cloudflare or Vercel country header; a Node server behind Apache or
-     * nginx has neither, so the default would set cookies for everyone. Wire your
+     * nginx may have neither, so the default denies cookies. Wire your
      * consent manager here (`consentFromCookie` covers the common case).
      */
     consent?: ConsentHook | null;

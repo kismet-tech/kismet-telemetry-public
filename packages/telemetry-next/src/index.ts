@@ -64,7 +64,7 @@ export interface KismetTelemetryConfig {
     profile?: RouteProfile;
     /**
      * The site's consent decision. Without it the country default applies, which
-     * off Cloudflare and Vercel sets cookies for everyone. Wire your consent
+     * denies missing or unknown geography. Wire your consent
      * manager here (`consentFromCookie` covers the common case).
      */
     consent?: ConsentHook | null;

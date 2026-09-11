@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.1.1
+
+- Require telemetry core 1.1.1 so missing or unknown country information denies tracking cookies by default. Explicit consent hooks remain supported.
+
 ## 1.1.0
 
 Conforms to contract 1.0 with the optional visitor-recognition extension.

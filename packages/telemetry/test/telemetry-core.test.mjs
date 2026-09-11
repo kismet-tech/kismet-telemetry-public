@@ -31,10 +31,11 @@ test('contract version is pinned', () => {
     assert.equal(CONTRACT_VERSION, '1.0');
 });
 
-test('consent: country default allows unknown, denies EU/EEA/GB/CH; hook overrides; hook failure is fail-closed', async () => {
+test('consent: country default denies unknown, denies EU/EEA/GB/CH; hook overrides; hook failure is fail-closed', async () => {
     assert.equal(COOKIE_CONSENT_DENY.size, 32);
-    assert.equal(countryAllowsCookies(null), true);
-    assert.equal(countryAllowsCookies('XX'), true);
+    for (const country of [null, undefined, '', 'XX', 'T1', 'ZZ', 'invalid']) {
+        assert.equal(countryAllowsCookies(country), false);
+    }
     assert.equal(countryAllowsCookies('US'), true);
     assert.equal(countryAllowsCookies('gb'), false);
     assert.equal(countryAllowsCookies('CH'), false);
@@ -216,7 +217,12 @@ test('resolveVisitor: threaded, cookie, suppressed (bot / no consent), cold mint
             resolveEndpoint: authority.url + '/v1/identity/resolve-anchor',
         };
         const H = (/** @type {Record<string,string>} */ extra) =>
-            new Headers({ 'user-agent': UA, 'x-forwarded-for': '203.0.113.7', ...extra });
+            new Headers({
+                'user-agent': UA,
+                'cf-ipcountry': 'US',
+                'x-forwarded-for': '203.0.113.7',
+                ...extra,
+            });
 
         // threaded
         const t = await resolveVisitor({
@@ -393,5 +399,28 @@ test('conversion clients: validation, headers, endpoints, never throw', async ()
         assert.match(down.error, /network down/);
     } finally {
         globalThis.fetch = realFetch;
+    }
+});
+
+test('missing geography suppresses cold and returning visitors before resolution; explicit consent permits them', async () => {
+    for (const cookie of ['', '_kid_sid=kid_Warm0001; _kid_ft=old']) {
+        const input = {
+            url: new URL('https://example.com/?kid_sid=kid_Link0001'),
+            headers: new Headers({ 'user-agent': UA, cookie }),
+            collectionSlug: 'lab',
+            trackingKey: 'ctk_test',
+        };
+        const denied = await resolveVisitor(input);
+        assert.equal(denied.suppressed, true);
+        assert.equal(denied.kidSid, null);
+        assert.equal(denied.resolveBody, null);
+        assert.equal(denied.reconcile, null);
+        const granted = await resolveVisitor({
+            ...input,
+            consent: () => true,
+            resolveEndpoint: 'http://127.0.0.1:1',
+        });
+        assert.equal(granted.kidSid, 'kid_Link0001');
+        await granted.reconcile;
     }
 });

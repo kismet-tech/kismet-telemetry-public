@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createServer } from 'node:http';
 import express from 'express';
 import { runConformance, formatReport } from '@kismet-tech/telemetry/conformance';
-import { consentFromCookie } from '@kismet-tech/telemetry';
+import { consentFromCookie, countryAllowsCookies } from '@kismet-tech/telemetry';
 import { kismetTelemetry } from '../dist/esm/index.js';
 
 // The adapter proves itself against the contract the way it will run at a
@@ -20,8 +20,7 @@ test('kismetTelemetry passes the v1 conformance suite through Express', async ()
             endpoints: { resolveAnchor: env.authorityUrl, track: env.relayUrl },
             consent: (ctx) => {
                 const c = (ctx.country || '').toUpperCase();
-                if (!c || c === 'XX' || c === 'T1' || !['GB', 'FR', 'DE', 'CH', 'IE'].includes(c))
-                    return true;
+                if (countryAllowsCookies(c)) return true;
                 return consentFromCookie('CookieConsent', /statistics:true/)(ctx);
             },
             profile: {

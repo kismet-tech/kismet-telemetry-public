@@ -60,6 +60,7 @@ test('readKismetSeed reads what the middleware wrote', async () => {
         headers: {
             'user-agent': 'Mozilla/5.0 Chrome/128 Safari/537.36',
             'x-forwarded-proto': 'https',
+            'cf-ipcountry': 'US',
         },
     });
     const res = await middleware(req, event);

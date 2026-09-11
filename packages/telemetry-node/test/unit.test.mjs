@@ -18,6 +18,7 @@ function fakeReq(url, headers = {}, { encrypted = true } = {}) {
     req.url = url;
     req.headers = {
         host: 'www.example.com',
+        'cf-ipcountry': 'US',
         'user-agent': 'Mozilla/5.0 Chrome/128 Safari/537.36',
         ...headers,
     };
