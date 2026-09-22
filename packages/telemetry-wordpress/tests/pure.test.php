@@ -124,5 +124,24 @@ ok(kismet_telemetry_valid_confirmation_code('EX-48213') && !kismet_telemetry_val
 
 ok(kismet_telemetry_valid_vid('vid_' . str_repeat('a', 64)) !== null, 'opaque visitor token grammar');
 
+
+// Mixed WordPress checkout: preserve the PMS ID on intent, decode + separators.
+$checkout_profile = ['intent_path' => '/book-now', 'property_param' => 'id', 'dates_param' => 'dates', 'guests_param' => 'sleeps'];
+$checkout = kismet_telemetry_classify('/book-now/', 'id=507f1f77bcf86cd799439011&dates=2026-10-03+to+2026-10-06&sleeps=4', $checkout_profile);
+ok($checkout['kind'] === 'intent' && $checkout['externalListingId'] === '507f1f77bcf86cd799439011' && $checkout['stayCheckIn'] === '2026-10-03' && $checkout['stayCheckOut'] === '2026-10-06' && $checkout['guestCount'] === 4, 'checkout: identifier and stay survive combined query format');
+foreach (['03/10/2026+to+06/10/2026', '2026-10-06+to+2026-10-03', '2026-02-30+to+2026-03-03', '2026-10-03+to+2026-10-03'] as $range) {
+    $invalid = kismet_telemetry_classify('/book-now', 'dates=' . $range, $checkout_profile);
+    ok($invalid['stayCheckIn'] === null && $invalid['stayCheckOut'] === null, 'checkout: invalid or ambiguous date range ignored');
+}
+$invalid = kismet_telemetry_classify('/book-now', 'id[]=wrong&dates[]=wrong&sleeps[]=4', $checkout_profile);
+ok($invalid['externalListingId'] === null && $invalid['stayCheckIn'] === null && $invalid['guestCount'] === null, 'checkout: query arrays ignored');
+$plain = kismet_telemetry_classify('/about', 'id=abc', $checkout_profile);
+ok($plain['externalListingId'] === null, 'checkout: query ID never classifies unrelated pages');
+ok(kismet_telemetry_consent_decision('cookie', '', ['cookieyes-consent' => 'consentid:x,necessary:yes,analytics:yes,advertisement:no'], 'cookieyes-consent', '(?:^|,)analytics:yes(?:,|$)'), 'CookieYes: affirmative analytics consent accepted');
+ok(!kismet_telemetry_consent_decision('cookie', '', ['cookieyes-consent' => 'consentid:x,necessary:yes,analytics:no'], 'cookieyes-consent', '(?:^|,)analytics:yes(?:,|$)'), 'CookieYes: denied analytics consent rejected');
+
+ok(kismet_telemetry_validate_stay(['stayCheckIn' => '2026-10-03', 'stayCheckOut' => '2026-10-06', 'guestCount' => 4]) === ['stayCheckIn' => '2026-10-03', 'stayCheckOut' => '2026-10-06', 'guestCount' => 4], 'stay override: normalized fields accepted');
+ok(kismet_telemetry_validate_stay(['stayCheckIn' => '2026-02-30', 'guestCount' => ['4']]) === ['stayCheckIn' => null, 'stayCheckOut' => null, 'guestCount' => null], 'stay override: invalid dates and arrays rejected');
+
 echo "\n$count checks, $fails failed\n";
 exit($fails === 0 ? 0 : 1);

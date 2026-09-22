@@ -26,6 +26,7 @@ Endpoint overrides for lab and staging in `wp-config.php`: `KISMET_TELEMETRY_RES
 ## Filters
 
 - `kismet_telemetry_should_set_cookies($allow, $country)`: the consent decision.
+- `kismet_telemetry_stay($stay, $path, $uri)`: return normalized `stayCheckIn`, `stayCheckOut` (ISO calendar dates) and `guestCount`; validated before emission. Use for a site's custom date format.
 - `kismet_telemetry_property($match, $path, $uri)`: return `['externalListingId' => '…']` or `['vrSlug' => '…']` for a property page.
 - `kismet_telemetry_is_search($is, $path)`, `kismet_telemetry_intent($is, $path)`, `kismet_telemetry_is_agent_surface($is, $path)`.
 - `kismet_telemetry_cookie_domain($domain)`, `kismet_telemetry_beacon_enabled($on)`.
@@ -45,3 +46,9 @@ The HTTP conformance run (contract section 15) needs a WordPress: the `kismet-lo
 ## Returning-visitor recognition
 
 Version 1.1.0 supports optional `_kid_vid` recovery for consenting visitors. See the [visitor-recognition guide](../../docs/visitor-recognition.md) for the server-side setting, consent integration and validation requirements.
+
+## Checkout query mapping (1.1.2)
+
+For a checkout such as `/book-now/?id=<PMS-listing-id>&dates=2026-10-03+to+2026-10-06&sleeps=4`, set Checkout path to `/book-now`, Checkout property parameter to `id`, Combined dates parameter to `dates`, and Guests parameter to `sleeps`. The combined range accepts only `YYYY-MM-DD to YYYY-MM-DD`, with real calendar dates and checkout after check-in. Other date formats require an explicit integration instead of guessing the locale.
+
+The property parameter applies only on the configured checkout path. It emits `externalListingId` with checkout intent. Property-level reporting requires Kismet to enable scoped PMS-ID resolution for the receiving backend. Unknown IDs remain collection-level events.

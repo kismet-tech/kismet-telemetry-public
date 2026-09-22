@@ -107,6 +107,8 @@ function kismet_telemetry_admin_save(): void {
     update_option('kismet_telemetry_intent_path', $text('kismet_telemetry_intent_path'), false);
     update_option('kismet_telemetry_checkin_param', $text('kismet_telemetry_checkin_param') ?: 'checkin', false);
     update_option('kismet_telemetry_checkout_param', $text('kismet_telemetry_checkout_param') ?: 'checkout', false);
+    update_option('kismet_telemetry_property_param', $text('kismet_telemetry_property_param'), false);
+    update_option('kismet_telemetry_dates_param', $text('kismet_telemetry_dates_param'), false);
     update_option('kismet_telemetry_guests_param', $text('kismet_telemetry_guests_param') ?: 'guests', false);
     add_settings_error('kismet_telemetry', 'saved', 'Settings saved.', 'updated');
 }
@@ -171,6 +173,8 @@ function kismet_telemetry_admin_page(): void {
                     <?php $field('kismet_telemetry_checkout_param', (string) kismet_telemetry_opt('checkout_param', 'checkout'), 'checkout'); ?>
                     <?php $field('kismet_telemetry_guests_param', (string) kismet_telemetry_opt('guests_param', 'guests'), 'guests'); ?>
                 </td></tr>
+                <tr><th scope="row">Checkout property parameter</th><td><?php $field('kismet_telemetry_property_param', (string) kismet_telemetry_opt('property_param', ''), 'id'); ?><p class="description">Optional PMS listing identifier on the checkout path.</p></td></tr>
+                <tr><th scope="row">Combined dates parameter</th><td><?php $field('kismet_telemetry_dates_param', (string) kismet_telemetry_opt('dates_param', ''), 'dates'); ?><p class="description">Optional range in YYYY-MM-DD to YYYY-MM-DD format. Ambiguous numeric dates are ignored.</p></td></tr>
             </table>
             <?php submit_button('Save settings'); ?>
         </form>

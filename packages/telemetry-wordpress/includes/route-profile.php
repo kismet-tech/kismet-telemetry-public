@@ -10,7 +10,7 @@ defined('ABSPATH') || exit;
 
 /**
  * Pure classification of a path + query against a profile array.
- * @param array{property_pattern?:string,property_id_kind?:string,search_paths?:string,intent_path?:string,checkin_param?:string,checkout_param?:string,guests_param?:string} $profile
+ * @param array{property_pattern?:string,property_id_kind?:string,search_paths?:string,intent_path?:string,checkin_param?:string,checkout_param?:string,guests_param?:string,property_param?:string,dates_param?:string} $profile
  * @return array{kind:string,vrSlug:?string,externalListingId:?string,stayCheckIn:?string,stayCheckOut:?string,guestCount:?int}
  */
 function kismet_telemetry_classify(string $path, string $query, array $profile, string $accept = ''): array {
@@ -34,9 +34,24 @@ function kismet_telemetry_classify(string $path, string $query, array $profile, 
         'guestCount'   => kismet_telemetry_parse_guests($qs($profile['guests_param'] ?? 'guests') ?? $qs('party')),
     ];
 
+    // Combined ranges are opt-in and ISO-only: never guess UK vs US numeric dates.
+    $range_param = trim((string) ($profile['dates_param'] ?? ''));
+    $range = $range_param !== '' ? $qs($range_param) : null;
+    if ($range !== null && preg_match('/^(\d{4}-\d{2}-\d{2})\s+to\s+(\d{4}-\d{2}-\d{2})$/', trim($range), $m)) {
+        $in = kismet_telemetry_parse_stay_date($m[1]);
+        $out = kismet_telemetry_parse_stay_date($m[2]);
+        if ($in !== null && $out !== null && $out > $in && checkdate((int) substr($in, 5, 2), (int) substr($in, 8, 2), (int) substr($in, 0, 4)) && checkdate((int) substr($out, 5, 2), (int) substr($out, 8, 2), (int) substr($out, 0, 4))) {
+            $stay['stayCheckIn'] = $in;
+            $stay['stayCheckOut'] = $out;
+        }
+    }
+
     $intent = trim((string) ($profile['intent_path'] ?? ''));
     if ($intent !== '' && kismet_telemetry_path_matches($path, $intent)) {
-        return array_merge($base, $stay, ['kind' => 'intent']);
+        $param = trim((string) ($profile['property_param'] ?? ''));
+        $id = $param !== '' ? $qs($param) : null;
+        $property = ($id !== null && preg_match('/^[a-zA-Z0-9_-]{1,255}$/', $id)) ? ['externalListingId' => $id] : [];
+        return array_merge($base, $stay, $property, ['kind' => 'intent']);
     }
 
     foreach (preg_split('/\r?\n/', (string) ($profile['search_paths'] ?? '')) ?: [] as $line) {
@@ -87,6 +102,25 @@ function kismet_telemetry_prefers_markdown(string $accept): bool {
     return $md > 0 && $md > $html;
 }
 
+/** Validate developer-supplied stay fields; only explicit ISO dates are accepted. */
+function kismet_telemetry_validate_stay(array $stay): array {
+    $out = ['stayCheckIn' => null, 'stayCheckOut' => null, 'guestCount' => null];
+    foreach (['stayCheckIn', 'stayCheckOut'] as $key) {
+        $value = $stay[$key] ?? null;
+        if (is_string($value) && preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $value, $m) && checkdate((int) $m[2], (int) $m[3], (int) $m[1])) {
+            $out[$key] = $value;
+        }
+    }
+    if ($out['stayCheckIn'] !== null && $out['stayCheckOut'] !== null && $out['stayCheckOut'] <= $out['stayCheckIn']) {
+        $out['stayCheckIn'] = $out['stayCheckOut'] = null;
+    }
+    $guests = $stay['guestCount'] ?? null;
+    if (is_int($guests) || is_string($guests)) {
+        $out['guestCount'] = kismet_telemetry_parse_guests((string) $guests);
+    }
+    return $out;
+}
+
 /** The request-scoped classification: settings plus the developer filters. */
 function kismet_telemetry_classify_request(): array {
     $uri   = (string) ($_SERVER['REQUEST_URI'] ?? '/');
@@ -100,6 +134,8 @@ function kismet_telemetry_classify_request(): array {
         'intent_path'      => (string) kismet_telemetry_opt('intent_path', ''),
         'checkin_param'    => (string) kismet_telemetry_opt('checkin_param', 'checkin'),
         'checkout_param'   => (string) kismet_telemetry_opt('checkout_param', 'checkout'),
+        'property_param'   => (string) kismet_telemetry_opt('property_param', ''),
+        'dates_param'      => (string) kismet_telemetry_opt('dates_param', ''),
         'guests_param'     => (string) kismet_telemetry_opt('guests_param', 'guests'),
     ];
     $cls = kismet_telemetry_classify($path, $query, $profile, (string) ($_SERVER['HTTP_ACCEPT'] ?? ''));
@@ -124,6 +160,12 @@ function kismet_telemetry_classify_request(): array {
     }
     if (apply_filters('kismet_telemetry_is_agent_surface', false, $path)) {
         $cls['kind'] = 'agent';
+    }
+    $stay = apply_filters('kismet_telemetry_stay', [
+        'stayCheckIn' => $cls['stayCheckIn'], 'stayCheckOut' => $cls['stayCheckOut'], 'guestCount' => $cls['guestCount'],
+    ], $path, $uri);
+    if (is_array($stay)) {
+        $cls = array_merge($cls, kismet_telemetry_validate_stay($stay));
     }
     return $cls;
 }
