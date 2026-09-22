@@ -3,7 +3,7 @@ Contributors: kismettech
 Tags: analytics, attribution, ai, tracking, first-party
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.1.0
+Stable tag: 1.1.2
 License: Apache-2.0
 License URI: https://www.apache.org/licenses/LICENSE-2.0
 
@@ -30,6 +30,12 @@ Real WordPress HTTP conformance and staging validation are pending. Use for revi
 Docs: https://developers.kismet.travel/telemetry/
 
 == Changelog ==
+
+= 1.1.2 =
+* Support checkout property IDs and combined ISO date ranges from configured query parameters.
+
+= 1.1.1 =
+* Deny session cookies when the visitor country is unknown unless explicit consent is configured.
 
 = 1.1.0 =
 Opt-in returning-visitor recognition with explicit consent and cache-safe cookie recovery.
