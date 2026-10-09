@@ -22,7 +22,7 @@ Kismet Telemetry connects page visits, AI crawler requests and completed booking
 | Node.js | [`@kismet-tech/telemetry-node`](https://www.npmjs.com/package/@kismet-tech/telemetry-node) | npm 1.0.2 |
 | WordPress | [Download plugin ZIP](https://github.com/kismet-tech/kismet-telemetry-public/releases/download/telemetry-wordpress-v1.1.1/kismet-telemetry-1.1.1.zip) | 1.1.1; site acceptance required |
 
-Packages are versioned independently. The source for each adapter is available in its package directory. Django support is planned.
+Packages are versioned independently. These versions deny cookies when country information is missing or unknown. Configure an explicit consent hook to follow your banner's saved choice. Django support is planned.
 
 ## Getting started
 
@@ -54,6 +54,8 @@ If a Next.js guest account owns `_kid_sid`, use adapter 1.1.2 or later with `ess
 
 The adapters send configured request metadata and event payloads to Kismet. They do not grant Kismet access to your source repository or upload your application code. The browser tracker is served separately from the npm packages. Review the [data-flow guide](docs/data-flow.md) for the fields collected, destinations and source-review boundaries.
 
+Connect your existing banner through the [consent integration guide](docs/consent.md), or ask Kismet to prepare the configuration for your CMP.
+
 Configure consent explicitly for your site. A geography fallback cannot determine a visitor's consent when the hosting platform supplies no country information. Keep tracking keys on the server.
 
 Server-side coverage includes requests that execute the adapter. Full-page caches can bypass WordPress and its server beacon. Property-level reporting depends on catalog configuration and backend support; Contract 1.1 identifier resolution and generic conversions are separate from the Contract 1.0 integration documented here.
@@ -76,3 +78,7 @@ Bot classification uses the versioned vocabulary in [`bot-patterns.json`](packag
 ## License
 
 The source in this repository is licensed under [Apache-2.0](LICENSE). See [NOTICE](NOTICE) for attribution. Previously published npm 1.0.0 artifacts retain their original license metadata, and third-party dependencies retain their own licenses.
+
+## Pinned browser tracker
+
+For review before browser-code changes, use the [pinned browser tracker](docs/pinned-browser-tracker.md). Its release URL is selected independently of the npm adapter version. The exact readable source and checksums are in [browser/1.0.0](browser/1.0.0).
