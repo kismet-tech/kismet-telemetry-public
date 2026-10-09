@@ -1,6 +1,6 @@
 {
   "name": "@kismet-tech/telemetry-next",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Kismet Telemetry for Next.js: createKismetMiddleware() on the @kismet-tech/telemetry core (contract 1.0), a <KismetSeed /> for the root layout, render-time server events, booking-bridge and quote-capture helpers, and the browser helpers. Ships with the contract conformance suite.",
   "type": "module",
   "sideEffects": false,
@@ -36,6 +36,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "build": "rm -rf dist && tsc -p tsconfig.build.json",
     "test": "npm run build && node --test test/*.test.mjs",
+    "test:visitor-browser": "node test/browser/visitor-recognition.mjs",
     "format:check": "prettier --check \"src/**/*.{ts,tsx}\" \"test/**/*.mjs\"",
     "format": "prettier --write \"src/**/*.{ts,tsx}\" \"test/**/*.mjs\"",
     "prepublishOnly": "npm run typecheck && npm test"
