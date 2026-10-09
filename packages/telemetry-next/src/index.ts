@@ -58,6 +58,12 @@ export interface KismetTelemetryConfig {
     collectionSlug: string;
     /** Enable the same-origin visitor-cookie follow-up. Requires a consent hook. */
     visitorRecognition?: boolean;
+    /**
+     * Preserve an existing guest-account SID when analytics is denied. This does
+     * not grant consent or expose that SID to analytics. Default: 'none'. Use
+     * the same setting in the separately pinned browser consent bridge.
+     */
+    essentialIdentity?: 'none' | 'account-owned-sid';
     /** The collection's `ctk_` tracking key. Server-side only; read it from the environment. */
     trackingKey: string;
     /** Which URLs are properties, search, the checkout path, agent surfaces. */
@@ -105,6 +111,26 @@ function apiEnv(cfg: KismetTelemetryConfig) {
         COLLECTION_KEY: cfg.trackingKey,
         ...(cfg.endpoints?.apiOrigin ? { KISMET_API_ORIGIN: cfg.endpoints.apiOrigin } : {}),
     };
+}
+
+function clearRecognitionCookies(
+    response: NextResponse,
+    cfg: KismetTelemetryConfig,
+    domain: string,
+    secure: boolean
+) {
+    const names =
+        cfg.essentialIdentity === 'account-owned-sid' ? [VID_COOKIE] : [VID_COOKIE, SID_COOKIE];
+    // Clear both scopes: an earlier installation may have used a host-only
+    // cookie while the current adapter uses the configured dotted domain.
+    for (const scope of new Set([domain, ''])) {
+        for (const name of names) {
+            response.headers.append(
+                'set-cookie',
+                buildCookie(name, '', { maxAge: 0, domain: scope, secure })
+            );
+        }
+    }
 }
 
 /**
@@ -172,14 +198,7 @@ export function createKismetMiddleware(cfg: KismetTelemetryConfig) {
                         })
                     );
                 if (visitor.suppressed) {
-                    response.headers.append(
-                        'set-cookie',
-                        buildCookie(VID_COOKIE, '', { maxAge: 0, domain, secure })
-                    );
-                    response.headers.append(
-                        'set-cookie',
-                        buildCookie(SID_COOKIE, '', { maxAge: 0, domain, secure })
-                    );
+                    clearRecognitionCookies(response, cfg, domain, secure);
                 }
                 return response;
             }
@@ -287,14 +306,7 @@ export function createKismetMiddleware(cfg: KismetTelemetryConfig) {
                 );
             }
             if (cfg.visitorRecognition && visitor.suppressed) {
-                response.headers.append(
-                    'set-cookie',
-                    buildCookie(VID_COOKIE, '', { maxAge: 0, domain, secure })
-                );
-                response.headers.append(
-                    'set-cookie',
-                    buildCookie(SID_COOKIE, '', { maxAge: 0, domain, secure })
-                );
+                clearRecognitionCookies(response, cfg, domain, secure);
             }
             return response;
         } catch (err) {

@@ -112,3 +112,19 @@ Resolves the visitor (threaded id, cookie, suppressed for bots and visitors with
 ## Returning-visitor recognition
 
 Version 1.1.0 supports optional `_kid_vid` recovery for consenting visitors. See the [visitor-recognition guide](../../docs/visitor-recognition.md) for the server-side setting, consent integration and validation requirements.
+
+If your guest account already uses `_kid_sid`, Next adapter 1.1.2 adds explicit preservation during analytics denial:
+
+```ts
+const telemetry = createKismetMiddleware({
+  collectionSlug: process.env.KISMET_COLLECTION_SLUG!,
+  trackingKey: process.env.KISMET_TRACKING_KEY!,
+  visitorRecognition: true,
+  essentialIdentity: 'account-owned-sid',
+  consent: consentFromCookie('analytics_consent', /^granted$/),
+});
+```
+
+Use this option only when your account integration owns the cookie. Use the same `essentialIdentity` setting in the pinned browser consent bridge (1.3.0 or a reviewed compatible later release). Denial still suppresses the analytics seed and session identity, makes no recognition authority call, and removes `_kid_vid`; it simply leaves the essential SID alone. Without this option, denial continues clearing the telemetry-owned session cookie. Saving a choice must notify the bridge immediately and update the consent cookie that the server reads.
+
+Recognition needs collection enablement at Kismet and an explicit consent hook. Verify consented recovery, denial and sign-in continuity on your staging host before activation. The setting does not enable the collection or change account authentication.

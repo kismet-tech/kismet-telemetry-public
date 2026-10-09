@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.1.2
+
+- Add `essentialIdentity: 'account-owned-sid'` for sites whose guest account owns `_kid_sid`. Analytics denial preserves that cookie on both page requests and the visitor endpoint, while suppressing telemetry identity and clearing `_kid_vid` in host-only and configured-domain scopes.
+- Keep the default cleanup for telemetry-owned session cookies. Retaining an essential SID does not grant analytics consent or enable recognition.
+
 ## 1.1.1
 
 - Require telemetry core 1.1.1 so missing or unknown country information denies tracking cookies by default. Explicit consent hooks remain supported.
