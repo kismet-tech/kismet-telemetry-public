@@ -18,11 +18,11 @@ Kismet Telemetry connects page visits, AI crawler requests and completed booking
 | Integration | Package | Availability |
 | --- | --- | --- |
 | JavaScript core | [`@kismet-tech/telemetry`](https://www.npmjs.com/package/@kismet-tech/telemetry) | npm 1.1.1 |
-| Next.js | [`@kismet-tech/telemetry-next`](https://www.npmjs.com/package/@kismet-tech/telemetry-next) | npm 1.1.1 |
+| Next.js | [`@kismet-tech/telemetry-next`](https://www.npmjs.com/package/@kismet-tech/telemetry-next) | npm 1.1.2 |
 | Node.js | [`@kismet-tech/telemetry-node`](https://www.npmjs.com/package/@kismet-tech/telemetry-node) | npm 1.0.2 |
-| WordPress | [Download plugin ZIP](https://github.com/kismet-tech/kismet-telemetry-public/releases/download/telemetry-wordpress-v1.1.1/kismet-telemetry-1.1.1.zip) | 1.1.1; local validation complete, site acceptance required |
+| WordPress | [Download plugin ZIP](https://github.com/kismet-tech/kismet-telemetry-public/releases/download/telemetry-wordpress-v1.1.1/kismet-telemetry-1.1.1.zip) | 1.1.1; site acceptance required |
 
-The WordPress plugin, core and Next.js adapter are version 1.1.1; Node.js is 1.0.2. These versions deny cookies when country information is missing or unknown. Configure an explicit consent hook to follow your banner’s saved choice. Django support is planned.
+Packages are versioned independently. The source for each adapter is available in its package directory. Django support is planned.
 
 ## Getting started
 
@@ -33,13 +33,13 @@ The WordPress plugin, core and Next.js adapter are version 1.1.1; Node.js is 1.0
 For Next.js:
 
 ```sh
-npm install @kismet-tech/telemetry@1.1.0 @kismet-tech/telemetry-next@1.1.0
+npm install @kismet-tech/telemetry@1.1.1 @kismet-tech/telemetry-next@1.1.2
 ```
 
 For Node.js:
 
 ```sh
-npm install @kismet-tech/telemetry@1.1.0 @kismet-tech/telemetry-node@1.0.1
+npm install @kismet-tech/telemetry@1.1.1 @kismet-tech/telemetry-node@1.0.2
 ```
 
 See the [Next.js guide](packages/telemetry-next/README.md), [Node.js guide](packages/telemetry-node/README.md), or [WordPress and Next.js integration guide](docs/install-wordpress-plus-nextjs.md) for configuration and booking-bridge examples. Installing a package alone does not configure tracking.
@@ -48,11 +48,11 @@ See the [Next.js guide](packages/telemetry-next/README.md), [Node.js guide](pack
 
 Next.js and WordPress support an opt-in `_kid_vid` cookie that links later sessions for consenting visitors. Enable the feature after Kismet configures your collection, following the [visitor-recognition guide](docs/visitor-recognition.md). Browser policies and cookie deletion can shorten its lifetime.
 
+If a Next.js guest account owns `_kid_sid`, use adapter 1.1.2 or later with `essentialIdentity: 'account-owned-sid'` in both the middleware and the reviewed browser consent bridge 1.3.0. This preserves the account cookie when analytics is denied while removing `_kid_vid` and suppressing analytics identity. Validate consent withdrawal and returning-visitor linkage before activation.
+
 ## Data and integration boundaries
 
 The adapters send configured request metadata and event payloads to Kismet. They do not grant Kismet access to your source repository or upload your application code. The browser tracker is served separately from the npm packages. Review the [data-flow guide](docs/data-flow.md) for the fields collected, destinations and source-review boundaries.
-
-Connect your existing banner through the [consent integration guide](docs/consent.md), or ask Kismet to prepare the configuration for your CMP.
 
 Configure consent explicitly for your site. A geography fallback cannot determine a visitor's consent when the hosting platform supplies no country information. Keep tracking keys on the server.
 
@@ -76,7 +76,3 @@ Bot classification uses the versioned vocabulary in [`bot-patterns.json`](packag
 ## License
 
 The source in this repository is licensed under [Apache-2.0](LICENSE). See [NOTICE](NOTICE) for attribution. Previously published npm 1.0.0 artifacts retain their original license metadata, and third-party dependencies retain their own licenses.
-
-## Pinned browser tracker
-
-For review before browser-code changes, use the [pinned browser tracker](docs/pinned-browser-tracker.md). Its release URL is selected independently of the npm adapter version. The exact readable source and checksums are in [browser/1.0.0](browser/1.0.0).
