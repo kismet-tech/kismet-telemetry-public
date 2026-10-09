@@ -14,7 +14,8 @@ const require = createRequire(import.meta.url);
 const { chromium } = require(process.env.PLAYWRIGHT_MODULE || 'playwright');
 const adapter = process.env.TELEMETRY_PACKAGE_ROOT;
 const { NextRequest } = await import(
-    pathToFileURL(require.resolve('next/server.js', adapter ? { paths: [adapter] } : undefined)).href
+    pathToFileURL(require.resolve('next/server.js', adapter ? { paths: [adapter] } : undefined))
+        .href
 );
 const { createKismetMiddleware, readKismetSeed } = await import(
     adapter ? pathToFileURL(join(adapter, 'dist/index.js')).href : '../../dist/index.js'
