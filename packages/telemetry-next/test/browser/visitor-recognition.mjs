@@ -154,10 +154,17 @@ const visit = async () => {
     await page().waitForFunction(() => window.fixtureReady);
 };
 const choice = async (value) => {
-    await page().evaluate((value) => {
-        document.cookie = `analytics=${value}; Path=/; Max-Age=86400; SameSite=Lax`;
-        window.KismetConsent.update({ analytics: value === 'granted', advertising: false });
-    }, value);
+    const currentPage = page();
+    await Promise.all([
+        currentPage.waitForEvent('framenavigated', (frame) => frame === currentPage.mainFrame()),
+        currentPage.evaluate((value) => {
+            document.cookie = `analytics=${value}; Path=/; Max-Age=86400; SameSite=Lax`;
+            window.KismetConsent.update({ analytics: value === 'granted', advertising: false });
+            // Exercise the closed gate in the same task, before the bridge reloads.
+            if (value === 'denied') window.Kismet.track('must-not-send');
+        }, value),
+    ]);
+    await currentPage.waitForFunction(() => window.fixtureReady);
 };
 const waitVid = async () => {
     await page().waitForFunction(() => /(?:^|;\s*)_kid_vid=vid_[a-f0-9]{64}/.test(document.cookie));
@@ -226,7 +233,6 @@ try {
             await page().waitForTimeout(100);
             const count = clientEvents.length;
             await choice('denied');
-            await page().evaluate(() => window.Kismet.track('must-not-send'));
             assert.equal((await cookies())._kid_vid, undefined);
             assert.equal((await cookies())._kid_sid, second._kid_sid);
             await page().waitForTimeout(100);
