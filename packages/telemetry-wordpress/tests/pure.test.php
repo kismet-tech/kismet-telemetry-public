@@ -38,6 +38,33 @@ require __DIR__ . '/../includes/conversion.php';
 $fails = 0; $count = 0;
 function ok(bool $c, string $name): void { global $fails, $count; $count++; if (!$c) { $fails++; echo "FAIL  $name\n"; } else { echo "ok    $name\n"; } }
 
+// Exercise actual settings save with WordPress persistence and notice stubs.
+function current_user_can($cap) { return true; }
+function check_admin_referer($action) { return true; }
+function sanitize_textarea_field($value) { return $value; }
+function add_settings_error($setting, $code, $message, $type = 'error') { $GLOBALS['__notices'][$code] = $message; }
+foreach (['', '   ', '[', 'analytics:yes'] as $pattern) {
+    $GLOBALS['__notices'] = [];
+    $_POST = ['kismet_telemetry_save' => '1', 'kismet_telemetry_consent_mode' => 'cookie',
+        'kismet_telemetry_consent_cookie' => 'cookieyes-consent', 'kismet_telemetry_consent_pattern' => $pattern];
+    kismet_telemetry_admin_save();
+    $valid = $pattern === 'analytics:yes';
+    ok(isset($GLOBALS['__notices']['saved']) === $valid, 'settings: successful save only for valid consent: ' . $pattern);
+    ok(kismet_telemetry_consent_decision('cookie', 'GB', ['cookieyes-consent' => 'analytics:yes'], 'cookieyes-consent', kismet_telemetry_opt('consent_pattern')) === $valid, 'settings: invalid/stripped pattern denies: ' . $pattern);
+}
+// Missing field simulates a WAF removing it entirely.
+unset($_POST['kismet_telemetry_consent_pattern']);
+$GLOBALS['__notices'] = [];
+kismet_telemetry_admin_save();
+ok(kismet_telemetry_opt('consent_pattern') === '' && isset($GLOBALS['__notices']['consent_pattern']), 'settings: removed field is denied with an error');
+$_POST = [];
+$GLOBALS['__opts'] = [];
+foreach (['', '  ', '['] as $pattern) {
+    ok(!kismet_telemetry_consent_decision('cookie', 'GB', ['cookieyes-consent' => 'analytics:yes'], 'cookieyes-consent', $pattern), 'consent: blank/invalid pattern cannot grant');
+}
+ok(kismet_telemetry_consent_decision('cookie', 'GB', ['cookieyes-consent' => 'consentid:abc,analytics:yes,advertisement:no'], 'cookieyes-consent', 'analytics:yes'), 'CookieYes simple matcher grants analytics');
+ok(!kismet_telemetry_consent_decision('cookie', 'GB', ['cookieyes-consent' => 'consentid:abc,analytics:no'], 'cookieyes-consent', 'analytics:yes'), 'CookieYes decline cookie does not grant');
+
 // Identifiers and the mint
 $ids = [];
 for ($i = 0; $i < 500; $i++) { $ids[kismet_telemetry_mint()] = true; }
@@ -114,7 +141,7 @@ ok($ev['actionType'] === 'fetch' && $ev['clientSessionId'] === null, 'event: age
 
 // Bootstrap: seed before tag, suppression path, no reserved globals, 1.5 s fallback
 $js = kismet_telemetry_bootstrap_js('https://www.example.co.uk/wp-admin/admin-ajax.php', 'https://kismet.travel/k.js', 'sea-view-stays');
-ok(strpos($js, '_kidSid=') !== false && strpos($js, '_sidSuppressed=1') !== false && strpos($js, '1500') !== false, 'bootstrap: seeds id or suppression, 1.5 s fallback');
+ok(strpos($js, '_kidSid=') !== false && strpos($js, '_sidSuppressed=1') !== false, 'bootstrap: seeds only after consent, explicit suppression');
 ok(strpos($js, '_kidSid=') < strpos($js, "s.src=K.kjs") || strpos($js, 'function load()') !== false, 'bootstrap: the tag is injected after the seed is set');
 foreach (['__kismetKjs', '__kismetKjsEval', '__kismetKjsTag', '__kismetAnalyticsAdapterMounted'] as $g) { ok(strpos($js, $g) === false, "bootstrap: never touches reserved global $g"); }
 ok(strpos($js, 'kismet_telemetry_anchor') !== false && strpos($js, 'ctk_') === false, 'bootstrap: calls our endpoint, carries no key');

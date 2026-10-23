@@ -197,22 +197,26 @@ function kismet_telemetry_anchor_ajax(): void {
 // ── The cache-safe head bootstrap ────────────────────────────────────────────
 
 /** The inline bootstrap JS, pure given the config. Exported for tests. */
-function kismet_telemetry_bootstrap_js(string $ajax_url, string $kjs_url, string $collection): string {
-    $cfg = wp_json_encode(['ajax' => $ajax_url, 'kjs' => $kjs_url, 'c' => $collection], JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT);
+function kismet_telemetry_bootstrap_js(string $ajax_url, string $kjs_url, string $collection, string $consent_cookie = ''): string {
+    $cfg = wp_json_encode(['ajax' => $ajax_url, 'kjs' => $kjs_url, 'c' => $collection, 'consentCookie' => $consent_cookie], JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT);
     return "/* Kismet Telemetry */(function(){\n"
         . "var K=" . $cfg . ";var RE=/^kid_[A-Za-z0-9]{6,40}$/;\n"
         . "window.Kismet=window.Kismet||{};\n"
         . "function load(){if(window.__kismetTelemetryTag)return;window.__kismetTelemetryTag=1;"
         . "var s=document.createElement('script');s.async=true;s.src=K.kjs+'?c='+encodeURIComponent(K.c);"
         . "(document.head||document.documentElement).appendChild(s);}\n"
-        // Always consult current consent, including on cached pages with an old cookie.
-        . "var done=false;function go(d){if(done)return;done=true;"
-        . "if(d&&!d.suppressed&&d.kid_sid&&RE.test(d.kid_sid)){window.Kismet._sidSuppressed=0;window.Kismet._kidSid=d.kid_sid;}"
-        . "else{window.Kismet._sidSuppressed=1;delete window.Kismet._kidSid;return;}load();}\n"
-        . "var t=setTimeout(function(){go(null);},1500);\n"
+        // A deadline is transport uncertainty, not consent denial. Keep the async
+        // request alive, but never start the tracker until current consent is known.
+        . "function consent(){return document.cookie.split(';').map(function(v){return v.trim();}).filter(function(v){return v.indexOf(K.consentCookie+'=')===0;}).join(';');}\n"
+        . "var before=consent(),suppressed=window.Kismet._sidSuppressed,done=false;\n"
+        . "function go(d){if(done)return;done=true;"
+        . "if((K.consentCookie&&consent()!==before)||(window.Kismet._sidSuppressed===1&&suppressed!==1))return;"
+        . "if(d&&d.suppressed){window.Kismet._sidSuppressed=1;delete window.Kismet._kidSid;return;}"
+        . "if(!d||d.disabled||!d.kid_sid||!RE.test(d.kid_sid))return;"
+        . "window.Kismet._sidSuppressed=0;window.Kismet._kidSid=d.kid_sid;load();}\n"
         . "try{fetch(K.ajax+'?action=kismet_telemetry_anchor&u='+encodeURIComponent(location.href),{credentials:'include',cache:'no-store'})"
-        . ".then(function(r){return r.json();}).then(function(d){clearTimeout(t);go(d);})"
-        . ".catch(function(){clearTimeout(t);go(null);});}catch(e){clearTimeout(t);go(null);}\n"
+        . ".then(function(r){if(!r.ok)throw new Error('Anchor unavailable');return r.json();}).then(go)"
+        . ".catch(function(){/* Unknown consent: do not load or mark suppressed. */});}catch(e){}\n"
         . "})();";
 }
 
@@ -223,5 +227,5 @@ function kismet_telemetry_head_bootstrap(): void {
     if (!kismet_telemetry_enabled()) {
         return;
     }
-    echo '<script>' . kismet_telemetry_bootstrap_js(admin_url('admin-ajax.php'), KISMET_TELEMETRY_KJS_URL, kismet_telemetry_collection()) . "</script>\n";
+    echo '<script>' . kismet_telemetry_bootstrap_js(admin_url('admin-ajax.php'), KISMET_TELEMETRY_KJS_URL, kismet_telemetry_collection(), kismet_telemetry_opt('consent_mode', 'geo') === 'cookie' ? (string) kismet_telemetry_opt('consent_cookie', '') : '') . "</script>\n";
 }

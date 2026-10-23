@@ -173,7 +173,7 @@ jobs:
         run: php tests/pure.test.php
 
       - name: Browser bootstrap regression tests
-        run: node --test tests/bootstrap.test.mjs
+        run: node --test tests/bootstrap.test.mjs tests/settings-validation.test.mjs
 
       - name: Build zip
         run: bin/build-zip.sh

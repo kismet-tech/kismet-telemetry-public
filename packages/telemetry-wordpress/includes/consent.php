@@ -47,8 +47,8 @@ function kismet_telemetry_consent_decision(string $mode, string $country, array 
         if ($cookie_name === '' || !isset($cookies[$cookie_name])) {
             return false;
         }
-        if ($pattern === '') {
-            return true;
+        if (trim($pattern) === '') {
+            return false;
         }
         $value = (string) $cookies[$cookie_name];
         $decoded = rawurldecode($value);

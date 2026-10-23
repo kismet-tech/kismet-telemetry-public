@@ -39,6 +39,7 @@ jobs:
           node scripts/generate-bot-patterns.mjs --check
           for f in kismet-telemetry.php includes/*.php; do php -l "$f"; done
           php tests/pure.test.php
+          node --test tests/bootstrap.test.mjs tests/settings-validation.test.mjs
           bin/build-zip.sh
       - name: Read version
         id: v

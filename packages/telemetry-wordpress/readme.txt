@@ -3,7 +3,7 @@ Contributors: kismettech
 Tags: analytics, attribution, ai, tracking, first-party
 Requires at least: 6.0
 Requires PHP: 7.4
-Stable tag: 1.1.0
+Stable tag: 1.1.2
 License: Apache-2.0
 License URI: https://www.apache.org/licenses/LICENSE-2.0
 
@@ -30,6 +30,13 @@ Real WordPress HTTP conformance and staging validation are pending. Use for revi
 Docs: https://developers.kismet.travel/telemetry/
 
 == Changelog ==
+
+= 1.1.2 =
+* Let slow anchor responses complete without interpreting transport delay as consent denial.
+* Reject stale anchor grants after a consent change.
+* Require a non-empty valid cookie consent pattern; empty or invalid values deny session tracking.
+* Warn when saved consent settings differ from the values submitted in the browser.
+* Browser tracker pin remains unchanged.
 
 = 1.1.0 =
 Opt-in returning-visitor recognition with explicit consent and cache-safe cookie recovery.

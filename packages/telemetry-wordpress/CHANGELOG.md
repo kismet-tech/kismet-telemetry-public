@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.1.2
+
+- Allow late successful anchor responses without treating network delay or failure as consent refusal. Do not load the tracker without a valid response or after the CMP cookie changes during the request.
+- Require a non-empty valid match pattern in cookie consent mode. Empty, stripped and invalid patterns deny session tracking.
+- Add settings validation and browser-side saved-value comparison for WAF-modified submissions.
+- Preserve the separately pinned browser tracker. Upgrade the plugin and purge full-page caches for the new bootstrap.
+
 ## 1.1.1
 
 - Deny identity cookies and browser tracker loading when country information is missing or unknown unless the site supplies explicit consent. Sites without trusted country headers must wire their consent manager.
