@@ -60,3 +60,18 @@ A local WordPress/Next replica prepares the integration. Final acceptance needs 
 ## Returning-visitor recognition
 
 Version 1.1.0 supports optional `_kid_vid` recovery for consenting visitors. See the [visitor-recognition guide](visitor-recognition.md) for the server-side setting, consent integration and validation requirements.
+
+## WordPress consent and delayed page loads
+
+In WordPress cookie consent mode, configure both the CMP cookie name and a
+non-empty match pattern. CookieYes uses `cookieyes-consent` and `analytics:yes`.
+Save and verify the displayed stored values, especially behind a WAF. Version
+1.1.2 denies session tracking for missing or invalid patterns and warns on a
+browser-submission/readback mismatch when session storage is available.
+
+The 1.1.2 bootstrap no longer treats a 1.5-second anchor delay as consent refusal.
+It waits asynchronously and loads the pinned tracker only after a valid response,
+provided the CMP cookie has not changed and the consent bridge has not newly
+suppressed tracking. Failed requests leave tracking unstarted; explicit denial
+still suppresses it. Install the plugin update and purge full-page caches to use
+this behavior. The separately pinned k.js URL is unchanged.

@@ -45,3 +45,23 @@ The HTTP conformance run (contract section 15) needs a WordPress: the `kismet-lo
 ## Returning-visitor recognition
 
 Version 1.1.0 supports optional `_kid_vid` recovery for consenting visitors. See the [visitor-recognition guide](../../docs/visitor-recognition.md) for the server-side setting, consent integration and validation requirements.
+
+## Consent and slow responses (1.1.2)
+
+Cookie consent mode requires both a cookie name and a non-empty valid value pattern.
+For CookieYes, use `cookieyes-consent` and `analytics:yes`. Cookie existence alone
+never grants consent. Empty or invalid patterns deny session tracking. Save, then
+verify the stored value: some firewalls strip regular expressions. The settings
+screen compares the submitted values with the readback when session storage is
+available and warns on a mismatch; server-side validation works without JavaScript.
+
+The cache-safe bootstrap waits asynchronously for the local anchor endpoint. A slow
+or failed request does not mean consent was refused and does not delete an existing
+seed. It also does not start k.js without a valid anchor response. A later valid
+response can load the tracker; a changed CMP cookie or a new explicit suppression
+prevents a stale response from granting consent. An explicit denied response still
+suppresses tracking. After changing consent, use your consent bridge's reload flow.
+
+Upgrade the WordPress plugin and purge full-page caches to serve this bootstrap.
+This patch does not change your separately pinned browser tracker or require Next
+middleware. It does not automatically update an already installed plugin.

@@ -8,7 +8,7 @@
 //   cookie_domain      optional override, e.g. .example.com
 //   consent_mode       'geo' (default) | 'always' | 'cookie'
 //   consent_cookie     cookie name the consent manager sets (consent_mode=cookie)
-//   consent_pattern    optional regex the cookie value must match (consent_mode=cookie)
+//   consent_pattern    required regex the cookie value must match (consent_mode=cookie)
 //   property_pattern   optional PCRE on the request path; first capture group = listing id
 //   property_id_kind   'externalListingId' (default) | 'vrSlug'
 //   search_paths       newline list; a trailing * is a prefix match
@@ -95,6 +95,14 @@ function kismet_telemetry_admin_save(): void {
     update_option('kismet_telemetry_consent_cookie', $text('kismet_telemetry_consent_cookie'), false);
     $pattern = trim((string) wp_unslash((string) ($_POST['kismet_telemetry_consent_pattern'] ?? '')));
     update_option('kismet_telemetry_consent_pattern', kismet_telemetry_valid_regex($pattern) ? $pattern : '', false);
+    $consent_ok = $mode !== 'cookie' || ($text('kismet_telemetry_consent_cookie') !== '' && kismet_telemetry_valid_regex($pattern));
+    if (!$consent_ok) {
+        add_settings_error('kismet_telemetry', 'consent_pattern', 'Cookie consent requires a cookie name and a non-empty valid match pattern. Session tracking is denied until corrected. If a value disappeared, check your firewall; CookieYes can use analytics:yes.');
+    }
+    if ((string) kismet_telemetry_opt('consent_pattern', '') !== $pattern) {
+        add_settings_error('kismet_telemetry', 'consent_readback', 'The stored consent pattern differs from the received value. Review the value shown below before testing.');
+        $consent_ok = false;
+    }
     $prop = trim((string) wp_unslash((string) ($_POST['kismet_telemetry_property_pattern'] ?? '')));
     if ($prop !== '' && !kismet_telemetry_valid_regex($prop)) {
         add_settings_error('kismet_telemetry', 'property_pattern', 'Property pattern is not a valid regular expression; left unchanged.');
@@ -108,7 +116,9 @@ function kismet_telemetry_admin_save(): void {
     update_option('kismet_telemetry_checkin_param', $text('kismet_telemetry_checkin_param') ?: 'checkin', false);
     update_option('kismet_telemetry_checkout_param', $text('kismet_telemetry_checkout_param') ?: 'checkout', false);
     update_option('kismet_telemetry_guests_param', $text('kismet_telemetry_guests_param') ?: 'guests', false);
-    add_settings_error('kismet_telemetry', 'saved', 'Settings saved.', 'updated');
+    if ($consent_ok) {
+        add_settings_error('kismet_telemetry', 'saved', 'Settings saved.', 'updated');
+    }
 }
 
 /** A regex the site typed is only used if PCRE accepts it (with a fixed delimiter). */
@@ -138,7 +148,7 @@ function kismet_telemetry_admin_page(): void {
         <?php if ($elements): ?>
             <div class="notice notice-info inline"><p>Kismet Elements is active. This plugin now owns tracking; Elements' own anchor and beacon are switched off, and its collection slug and tracking key are used when the fields below are empty.</p></div>
         <?php endif; ?>
-        <form method="post">
+        <form method="post" id="kismet-telemetry-settings">
             <?php wp_nonce_field('kismet_telemetry_settings'); ?>
             <input type="hidden" name="kismet_telemetry_save" value="1" />
             <h2>Connection</h2>
@@ -157,7 +167,7 @@ function kismet_telemetry_admin_page(): void {
                     <label><input type="radio" name="kismet_telemetry_consent_mode" value="always" <?php checked($mode, 'always'); ?> /> Always allow (sites with no consent obligation)</label>
                 </td></tr>
                 <tr><th scope="row"><label for="kismet_telemetry_consent_cookie">Consent cookie name</label></th><td><?php $field('kismet_telemetry_consent_cookie', (string) kismet_telemetry_opt('consent_cookie', ''), 'CookieConsent'); ?></td></tr>
-                <tr><th scope="row"><label for="kismet_telemetry_consent_pattern">Value must match</label></th><td><?php $field('kismet_telemetry_consent_pattern', (string) kismet_telemetry_opt('consent_pattern', ''), 'statistics:true (regular expression, optional)'); ?></td></tr>
+                <tr><th scope="row"><label for="kismet_telemetry_consent_pattern">Value must match</label></th><td><?php $field('kismet_telemetry_consent_pattern', (string) kismet_telemetry_opt('consent_pattern', ''), 'analytics:yes (required in cookie mode)'); ?><p class="description">Required in cookie mode. CookieYes: analytics:yes. An empty or invalid pattern denies session tracking. After saving, confirm this field still contains your intended value.</p></td></tr>
             </table>
             <h2>Route profile</h2>
             <p class="description" style="max-width:44em;">Which URLs are which, so the funnel stages light without any code: property pages, results pages, the checkout path. Developers can also use the <code>kismet_telemetry_property</code>, <code>kismet_telemetry_is_search</code> and <code>kismet_telemetry_intent</code> filters.</p>
@@ -174,6 +184,7 @@ function kismet_telemetry_admin_page(): void {
             </table>
             <?php submit_button('Save settings'); ?>
         </form>
+        <script><?php echo file_get_contents(__DIR__ . '/settings-validation.js'); ?></script>
         <h2>Verify</h2>
         <ol style="max-width:44em;">
             <li>Load the home page in a fresh browser. Expect a <code>_kid_sid</code> cookie on <code><?php echo esc_html('.' . kismet_telemetry_serving_host()); ?></code> and <code>window.Kismet._kidSid</code> equal to it.</li>
